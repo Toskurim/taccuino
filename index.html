@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Taccuino</title>
+<meta name="theme-color" content="#17212b">
+<style>
+/* Layout: libreria di quaderni, editor a tutto schermo con barra strumenti in alto e navigazione pagine in basso. */
+:root{--bg:#e8ebee;--panel:#ffffff;--ink:#17212b;--muted:#5d6c7b;--line:#cdd5dc;--accent:#1b4fd8;--accent-ink:#ffffff;--bar:#17212b;--bar-ink:#eef2f6;--bar-hover:#2a3745;--stage:#c5ccd3;--danger:#c0392b;--ok:#17803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f151b;--panel:#18212a;--ink:#e8edf2;--muted:#98a8b8;--line:#2b3846;--accent:#7aa0ff;--accent-ink:#081023;--bar:#0a0f14;--bar-ink:#eef2f6;--bar-hover:#1c2833;--stage:#0a0e13;--danger:#ff7a6b;--ok:#4cc38a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f151b;--panel:#18212a;--ink:#e8edf2;--muted:#98a8b8;--line:#2b3846;--accent:#7aa0ff;--accent-ink:#081023;--bar:#0a0f14;--bar-ink:#eef2f6;--bar-hover:#1c2833;--stage:#0a0e13;--danger:#ff7a6b;--ok:#4cc38a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.2}
+.screen{position:absolute;inset:0;overflow:auto;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding:22px 20px 16px}
+h1{font-size:30px;letter-spacing:-.01em}
+.sub{margin:4px 0 0;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{min-height:44px;padding:0 16px;border:1px solid var(--line);background:var(--panel);border-radius:10px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--danger)}
+.btn:focus-visible,.ib:focus-visible,.card:focus-visible,.pill:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{padding:4px 20px 28px;flex:1;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.card .th{aspect-ratio:3/4;background:var(--stage);display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:13px}
+.card .th img{width:100%;height:100%;object-fit:contain;background:#fff}
+.card .info{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .mt{font-size:13px;color:var(--muted)}
+.card .dots{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:50%;border:0;background:color-mix(in srgb,var(--panel) 88%,transparent);display:grid;place-items:center;cursor:pointer}
+.empty{max-width:46ch;color:var(--muted);padding:28px 0}
+.foot{padding:14px 20px 22px;color:var(--muted);font-size:13px}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* corso */
+.head2{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:2}
+.head2 h2{font-size:20px}
+.ibd{width:44px;height:44px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+.ibd:focus-visible{outline:3px solid var(--accent)}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:20px}
+.les{display:flex;gap:14px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;min-width:0}
+.les .n{flex:none;width:42px;height:42px;border-radius:10px;background:var(--bar);color:var(--bar-ink);display:grid;place-items:center;font-weight:700;font-variant-numeric:tabular-nums}
+.les.done .n{background:var(--ok);color:#fff}
+.les b{display:block}
+.les small{color:var(--muted)}
+.intro{padding:20px 20px 0;max-width:70ch;color:var(--muted)}
+.lesson{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:28px;padding:22px 20px 40px;align-items:start}
+@media (max-width:780px){.lesson{grid-template-columns:minmax(0,1fr)}}
+.lesson ol{padding-left:22px;margin:12px 0}
+.lesson li{margin:0 0 10px;max-width:62ch}
+.tip{border-left:4px solid var(--accent);padding:8px 12px;background:var(--panel);border-radius:0 8px 8px 0;max-width:62ch}
+.guide{border:1px solid var(--line);background:#fff;border-radius:8px;overflow:hidden}
+.guide img{display:block;width:100%;height:auto}
+.tags{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
+.tag{font-size:13px;padding:2px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+/* editor */
+#editor{overflow:hidden;background:var(--stage)}
+.bar{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:6px 10px;background:var(--bar);color:var(--bar-ink);flex:none}
+.grp{display:flex;align-items:center;gap:2px}
+.ib{min-width:44px;height:44px;padding:0 8px;border:0;border-radius:10px;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer}
+.ib:hover{background:var(--bar-hover)}
+.ib span{font-size:10px;line-height:1;margin-top:1px;opacity:.85}
+.ib.on{background:var(--accent);color:var(--accent-ink)}
+.ib:disabled{opacity:.35}
+.title{flex:1 1 140px;min-width:100px;max-width:280px;height:40px;border:1px solid transparent;background:transparent;color:inherit;border-radius:8px;padding:0 10px;font-weight:600}
+.title:focus{border-color:var(--bar-hover);background:var(--bar-hover);outline:none}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.35);cursor:pointer;padding:0;margin:0 1px;flex:none}
+.sw.on{outline:3px solid var(--accent);outline-offset:1px;border-color:#fff}
+.colorsOff{opacity:.35;pointer-events:none}
+input[type=color]{width:34px;height:34px;border:0;padding:0;background:none;border-radius:50%;cursor:pointer}
+.size{display:flex;align-items:center;gap:8px}
+.size input{width:110px;accent-color:var(--accent)}
+.size .dot{width:30px;height:30px;display:grid;place-items:center}
+.size .dot i{display:block;border-radius:50%;background:var(--bar-ink)}
+.stage{position:relative;flex:1;min-height:0;touch-action:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;-webkit-user-select:none;user-select:none;display:block}
+.pagebar{flex:none;display:flex;justify-content:center;align-items:center;gap:6px;padding:4px 8px;background:var(--bar);color:var(--bar-ink)}
+.pagebar .info{min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
+.pagebar .ib{flex-direction:row;gap:6px}
+/* menu, finestre, avvisi */
+.menu{position:fixed;z-index:50;min-width:230px;max-width:min(92vw,320px);max-height:80vh;overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.menu button{display:flex;justify-content:space-between;gap:12px;width:100%;min-height:44px;align-items:center;text-align:left;border:0;background:transparent;border-radius:8px;padding:0 12px;cursor:pointer}
+.menu button:hover{background:var(--bg)}
+.menu button.danger{color:var(--danger)}
+.menu button[data-on="1"]::after{content:"\2713";color:var(--ok);font-weight:700}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+.menu .lb{padding:6px 12px 2px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.modalbg{position:fixed;inset:0;z-index:60;background:rgba(8,14,20,.55);display:grid;place-items:center;padding:16px}
+.modal{background:var(--panel);color:var(--ink);border-radius:14px;padding:20px;width:min(100%,460px);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.modal h2{font-size:20px}
+.modal p{margin:0;color:var(--muted)}
+.modal label.f{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.modal input[type=text]{height:44px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:0 12px;font-weight:400}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--bg);cursor:pointer}
+.pill.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.acts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.prev{max-width:100%;max-height:46vh;object-fit:contain;border:1px solid var(--line);background:#fff;align-self:center}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:70;background:var(--bar);color:var(--bar-ink);padding:10px 16px;border-radius:10px;max-width:min(92vw,520px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .12s}.card:active{transform:scale(.985)}}
+</style>
+</head>
+<body>
+
+<div id="home" class="screen">
+  <header class="top">
+    <div><h1>Taccuino</h1><p class="sub">Quaderni a penna per tablet. Gratis, senza account.</p></div>
+    <div class="row">
+      <button class="btn primary" id="bNew">Nuovo quaderno</button>
+      <button class="btn" id="bImport">Importa PDF, foto o quaderno</button>
+      <button class="btn" id="bCourse">Corso di disegno</button>
+    </div>
+  </header>
+  <main>
+    <div id="grid" class="grid"></div>
+    <p id="empty" class="empty" hidden>Nessun quaderno per ora. Tocca &laquo;Nuovo quaderno&raquo; per iniziare a scrivere, oppure importa un PDF o la foto di un disegno per scriverci sopra.</p>
+  </main>
+  <footer class="foot">Versione <span id="ver"></span>. I quaderni restano salvati su questo dispositivo; per passarli ai colleghi usa il menu del quaderno (&laquo;Esporta&raquo;).</footer>
+</div>
+
+<div id="course" class="screen" hidden>
+  <div class="head2"><button class="ibd" id="cBack" aria-label="Indietro" data-ic="back"></button><h2>Corso di disegno</h2></div>
+  <p class="intro">Dieci lezioni brevi, dalle linee base al manga. Ogni lezione ha una pagina guida con punti e tracce da ripassare con la penna, pronta da aprire nell&rsquo;editor.</p>
+  <div id="lessons" class="lessons"></div>
+</div>
+
+<div id="lesson" class="screen" hidden>
+  <div class="head2"><button class="ibd" id="lBack" aria-label="Indietro" data-ic="back"></button><h2 id="lTitle"></h2></div>
+  <div class="lesson" id="lBody"></div>
+</div>
+
+<div id="editor" class="screen" hidden>
+  <div class="bar">
+    <button class="ib" id="eBack" aria-label="Torna ai quaderni" data-ic="back"><span>Quaderni</span></button>
+    <input id="eTitle" class="title" aria-label="Titolo del quaderno" autocomplete="off">
+    <div class="grp">
+      <button class="ib tool" data-tool="pen" data-ic="pen" aria-label="Penna"><span>Penna</span></button>
+      <button class="ib tool" data-tool="hl" data-ic="hl" aria-label="Evidenziatore"><span>Evidenz.</span></button>
+      <button class="ib tool" data-tool="er" data-ic="er" aria-label="Gomma"><span>Gomma</span></button>
+    </div>
+    <div class="grp" id="colors"></div>
+    <label class="size" aria-label="Spessore"><input id="eSize" type="range" min="1" max="20" step="1"><span class="dot"><i id="sizeDot"></i></span></label>
+    <div class="grp">
+      <button class="ib" id="eUndo" data-ic="undo" aria-label="Annulla"><span>Annulla</span></button>
+      <button class="ib" id="eRedo" data-ic="redo" aria-label="Ripeti"><span>Ripeti</span></button>
+    </div>
+    <div class="grp">
+      <button class="ib" id="eZout" data-ic="minus" aria-label="Riduci"><span>Zoom −</span></button>
+      <button class="ib" id="eZin" data-ic="plus" aria-label="Ingrandisci"><span>Zoom +</span></button>
+      <button class="ib" id="eFit" data-ic="fit" aria-label="Adatta alla finestra"><span>Adatta</span></button>
+    </div>
+    <button class="ib" id="eMore" data-ic="more" aria-label="Altro"><span>Altro</span></button>
+  </div>
+  <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+  <div class="pagebar">
+    <button class="ib" id="pPrev" data-ic="back" aria-label="Pagina precedente"></button>
+    <span class="info" id="pInfo">1 / 1</span>
+    <button class="ib" id="pNext" data-ic="next" aria-label="Pagina successiva"></button>
+    <button class="ib" id="pAdd" data-ic="plus" aria-label="Aggiungi pagina"><span>Pagina</span></button>
+  </div>
+</div>
+
+<input type="file" id="fileIn" hidden accept=".pdf,.taccuino,application/pdf,image/*" multiple>
+<input type="file" id="photoIn" hidden accept="image/*">
+<div id="toast" class="toast" hidden></div>
+
+<script>
+'use strict';
+const VERSION='0.1.0';
+const PW=1240, PH=1754;
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- icone ---------- */
+const ICONS={
+ back:'<path d="M15 5l-7 7 7 7"/>',next:'<path d="M9 5l7 7-7 7"/>',
+ pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z"/>',
+ hl:'<path d="M9 14l6-6 3 3-6 6H9v-3z"/><path d="M5 20h9"/>',
+ er:'<path d="M8 20h11"/><path d="M5.5 14.5L13 7l5 5-6.5 6.5H8l-2.5-2.5a1.4 1.4 0 010-2z"/>',
+ undo:'<path d="M9 8L4 13l5 5"/><path d="M4 13h10a5 5 0 000-10h-3"/>',
+ redo:'<g transform="translate(24 0) scale(-1 1)"><path d="M9 8L4 13l5 5"/><path d="M4 13h10a5 5 0 000-10h-3"/></g>',
+ plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+ fit:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+ more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
+};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+document.querySelectorAll('[data-ic]').forEach(b=>b.insertAdjacentHTML('afterbegin',ic(b.dataset.ic)));
+
+/* ---------- messaggi e finestre ---------- */
+let toastT=0;
+function toast(msg,ms=2800){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms);}
+function modal(build){
+  const bg=document.createElement('div');bg.className='modalbg';
+  const m=document.createElement('div');m.className='modal';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');
+  bg.append(m);document.body.append(bg);
+  const close=()=>bg.remove();
+  bg.addEventListener('pointerdown',e=>{if(e.target===bg)close();});
+  build(m,close);
+  const f=m.querySelector('input,button');if(f)f.focus({preventScroll:true});
+  return close;
+}
+function btn(label,cls,fn){const b=document.createElement('button');b.className='btn '+(cls||'');b.textContent=label;b.onclick=fn;return b;}
+function ask(title,text,okLabel='Conferma',danger=false){
+  return new Promise(res=>{modal((m,close)=>{
+    const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=text;
+    const a=document.createElement('div');a.className='acts';
+    a.append(btn('Annulla','',()=>{close();res(false)}),btn(okLabel,danger?'danger':'primary',()=>{close();res(true)}));
+    m.append(h,p,a);});});
+}
+function askText(title,value,okLabel='Salva'){
+  return new Promise(res=>{modal((m,close)=>{
+    const h=document.createElement('h2');h.textContent=title;
+    const i=document.createElement('input');i.type='text';i.value=value||'';i.setAttribute('aria-label',title);
+    const go=()=>{close();res(i.value.trim()||null)};
+    i.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+    const a=document.createElement('div');a.className='acts';
+    a.append(btn('Annulla','',()=>{close();res(null)}),btn(okLabel,'primary',go));
+    m.append(h,i,a);setTimeout(()=>i.select(),30);});});
+}
+let menuEl=null;
+function closeMenu(){if(menuEl){menuEl.remove();menuEl=null;document.removeEventListener('pointerdown',outsideMenu,true);}}
+function outsideMenu(e){if(menuEl&&!menuEl.contains(e.target))closeMenu();}
+function menu(anchor,items){
+  closeMenu();
+  const m=document.createElement('div');m.className='menu';
+  for(const it of items){
+    if(it==='-'){m.append(document.createElement('hr'));continue;}
+    if(it.label&&it.head){const d=document.createElement('div');d.className='lb';d.textContent=it.label;m.append(d);continue;}
+    const b=document.createElement('button');b.textContent=it.label;
+    if(it.danger)b.classList.add('danger');
+    if(it.on!==undefined)b.dataset.on=it.on?'1':'0';
+    b.onclick=()=>{closeMenu();it.fn();};m.append(b);
+  }
+  document.body.append(m);menuEl=m;
+  const r=anchor.getBoundingClientRect();
+  m.style.left=clamp(r.right-m.offsetWidth,8,innerWidth-m.offsetWidth-8)+'px';
+  m.style.top=clamp(r.bottom+6,8,Math.max(8,innerHeight-m.offsetHeight-8))+'px';
+  setTimeout(()=>document.addEventListener('pointerdown',outsideMenu,true),0);
+}
+
+/* ---------- archivio (IndexedDB, con ripiego in memoria) ---------- */
+const store={db:null,ok:false,mem:{q:new Map(),i:new Map()},
+ async open(){
+  try{this.db=await new Promise((res,rej)=>{const r=indexedDB.open('taccuino',1);
+    r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('q',{keyPath:'id'});d.createObjectStore('i');};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('bloccato'));});this.ok=true;}
+  catch(e){this.ok=false;}
+ },
+ run(st,mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction(st,mode);const r=fn(t.objectStore(st));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);});},
+ async all(){return this.ok?this.run('q','readonly',s=>s.getAll()):[...this.mem.q.values()];},
+ async put(o){if(!this.ok){this.mem.q.set(o.id,JSON.parse(JSON.stringify(o)));return;}return this.run('q','readwrite',s=>s.put(o));},
+ async putImg(k,v){if(!this.ok){this.mem.i.set(k,v);return;}return this.run('i','readwrite',s=>s.put(v,k));},
+ async getImg(k){return this.ok?this.run('i','readonly',s=>s.get(k)):this.mem.i.get(k);},
+ async delImg(k){if(!this.ok){this.mem.i.delete(k);return;}return this.run('i','readwrite',s=>s.delete(k));},
+ async delNb(n){for(const p of n.pages)if(p.hasImg)await this.delImg(p.id);
+   if(!this.ok){this.mem.q.delete(n.id);return;}return this.run('q','readwrite',s=>s.delete(n.id));}
+};
+
+/* ---------- modello dati ---------- */
+const BGS={bianco:'Bianco',righe:'Righe',quadretti:'Quadretti',puntini:'Puntini',millimetrata:'Millimetrata'};
+const newPage=(w,h,bg,hasImg=false)=>({id:uid(),w,h,bg,hasImg,strokes:[]});
+function newNotebook(title,orient,bg){
+  const w=orient==='o'?PH:PW,h=orient==='o'?PW:PH;
+  return {id:uid(),title,created:Date.now(),updated:Date.now(),w,h,bg,last:0,thumb:null,pages:[newPage(w,h,bg)]};
+}
+const imgs=new Map();
+const loadImage=url=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('immagine non leggibile'));i.src=url;});
+async function loadImgs(n){for(const p of n.pages){if(p.hasImg&&!imgs.has(p.id)){const d=await store.getImg(p.id);if(d)imgs.set(p.id,await loadImage(d));}}}
+async function attachImage(page,dataUrl){page.hasImg=true;await store.putImg(page.id,dataUrl);imgs.set(page.id,await loadImage(dataUrl));}
+
+/* ---------- disegno ---------- */
+function drawBg(c,pg){
+  const w=pg.w,h=pg.h;c.fillStyle='#ffffff';c.fillRect(0,0,w,h);
+  const t=pg.bg;if(t==='bianco')return;
+  c.save();
+  if(t==='righe'){c.beginPath();for(let y=150;y<h;y+=62){c.moveTo(0,y);c.lineTo(w,y);}c.strokeStyle='#b8c6e4';c.lineWidth=1.6;c.stroke();
+    c.beginPath();c.moveTo(130,0);c.lineTo(130,h);c.strokeStyle='#e6a3a3';c.lineWidth=1.6;c.stroke();}
+  else if(t==='quadretti'){c.beginPath();for(let x=50;x<w;x+=50){c.moveTo(x,0);c.lineTo(x,h);}for(let y=50;y<h;y+=50){c.moveTo(0,y);c.lineTo(w,y);}c.strokeStyle='#cfd9ef';c.lineWidth=1.2;c.stroke();}
+  else if(t==='puntini'){c.beginPath();for(let x=50;x<w;x+=50)for(let y=50;y<h;y+=50){c.moveTo(x+2.5,y);c.arc(x,y,2.5,0,6.2832);}c.fillStyle='#9fb0cf';c.fill();}
+  else if(t==='millimetrata'){
+    c.beginPath();for(let x=10;x<w;x+=10){if(x%50){c.moveTo(x,0);c.lineTo(x,h);}}for(let y=10;y<h;y+=10){if(y%50){c.moveTo(0,y);c.lineTo(w,y);}}c.strokeStyle='#e1e9f6';c.lineWidth=.9;c.stroke();
+    c.beginPath();for(let x=50;x<w;x+=50){c.moveTo(x,0);c.lineTo(x,h);}for(let y=50;y<h;y+=50){c.moveTo(0,y);c.lineTo(w,y);}c.strokeStyle='#b5c7e8';c.lineWidth=1.4;c.stroke();}
+  c.restore();
+}
+function drawStroke(c,s){
+  const p=s.p,n=p.length/3;if(!n)return;
+  c.lineCap='round';c.lineJoin='round';
+  if(s.t==='hl'){
+    c.save();c.globalAlpha=.4;c.globalCompositeOperation='multiply';c.strokeStyle=s.c;c.lineWidth=s.w;c.beginPath();c.moveTo(p[0],p[1]);
+    if(n===1)c.lineTo(p[0]+.01,p[1]);
+    else{for(let i=1;i<n-1;i++)c.quadraticCurveTo(p[i*3],p[i*3+1],(p[i*3]+p[i*3+3])/2,(p[i*3+1]+p[i*3+4])/2);c.lineTo(p[(n-1)*3],p[(n-1)*3+1]);}
+    c.stroke();c.restore();return;
+  }
+  c.strokeStyle=s.c;c.fillStyle=s.c;
+  if(n===1){c.beginPath();c.arc(p[0],p[1],s.w*(.5+p[2])/2,0,6.2832);c.fill();return;}
+  for(let i=1;i<n;i++){
+    const ax=i===1?p[0]:(p[i*3-3]+p[i*3])/2,ay=i===1?p[1]:(p[i*3-2]+p[i*3+1])/2;
+    const bx=i<n-1?(p[i*3]+p[i*3+3])/2:p[i*3],by=i<n-1?(p[i*3+1]+p[i*3+4])/2:p[i*3+1];
+    c.beginPath();c.moveTo(ax,ay);c.quadraticCurveTo(p[i*3],p[i*3+1],bx,by);c.lineWidth=s.w*(.5+p[i*3+2]);c.stroke();
+  }
+}
+function paintPage(c,pg){
+  drawBg(c,pg);const im=imgs.get(pg.id);if(im)c.drawImage(im,0,0,pg.w,pg.h);
+  for(const s of pg.strokes)drawStroke(c,s);
+}
+function renderPageCanvas(pg,scale){
+  const cv=document.createElement('canvas');cv.width=Math.round(pg.w*scale);cv.height=Math.round(pg.h*scale);
+  const c=cv.getContext('2d');c.scale(scale,scale);paintPage(c,pg);return cv;
+}
+function makeThumb(pg){try{return renderPageCanvas(pg,220/pg.w).toDataURL('image/jpeg',.7);}catch(e){return null;}}
+
+/* ---------- editor ---------- */
+const cv=$('#cv'),ctx=cv.getContext('2d'),cache=document.createElement('canvas'),cx2=cache.getContext('2d'),stage=$('#stage');
+let nb=null,cur=0,z=1,ox=0,oy=0,SW=300,SH=300,dpr=1,layerDirty=true,raf=0,live=false,hover=null,stageColor='#c5ccd3',fitMode='w';
+let tool='pen',fingerDraw=false;
+try{fingerDraw=localStorage.getItem('taccuino.dito')==='1';}catch(e){}
+const W={pen:3,hl:26,er:30},RANGE={pen:[1,20],hl:[8,60],er:[10,90]};
+const COL={pen:'#111827',hl:'#ffd60a'};
+const PALETTE=['#111827','#1b4fd8','#d62828','#1f8a4c','#ef7d00','#7b3fe4','#7a4b2a','#6b7785','#ffd60a','#7ed957','#38bdf8','#ff5fa2'];
+const hist=new Map();
+const page=()=>nb.pages[cur];
+const H=()=>{const id=page().id;if(!hist.has(id))hist.set(id,{u:[],r:[]});return hist.get(id);};
+function req(){if(!raf)raf=requestAnimationFrame(frame);}
+function readTheme(){stageColor=getComputedStyle(document.documentElement).getPropertyValue('--stage').trim()||'#c5ccd3';layerDirty=true;req();}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+
+function resize(){
+  const r=stage.getBoundingClientRect();if(!r.width||!r.height)return;
+  dpr=Math.min(window.devicePixelRatio||1,2.5);SW=r.width;SH=r.height;
+  cv.width=cache.width=Math.round(SW*dpr);cv.height=cache.height=Math.round(SH*dpr);layerDirty=true;req();
+}
+new ResizeObserver(()=>{if(nb)resize();}).observe(stage);
+function fit(mode){
+  if(!nb)return;if(mode)fitMode=mode;const pg=page(),m=Math.min(24,SW*.04);
+  z=fitMode==='w'?(SW-m*2)/pg.w:Math.min((SW-m*2)/pg.w,(SH-m*2)/pg.h);
+  ox=(SW-pg.w*z)/2;oy=pg.h*z<SH-m*2?(SH-pg.h*z)/2:m;layerDirty=true;req();
+}
+function clampPan(){const pg=page(),k=90;ox=clamp(ox,k-pg.w*z,SW-k);oy=clamp(oy,k-pg.h*z,SH-k);}
+function zoomAt(x,y,f){const nz=clamp(z*f,.15,8);ox=x-(x-ox)*(nz/z);oy=y-(y-oy)*(nz/z);z=nz;clampPan();layerDirty=true;req();}
+function renderLayer(){
+  const c=cx2,pg=page();c.setTransform(1,0,0,1,0,0);c.fillStyle=stageColor;c.fillRect(0,0,cache.width,cache.height);
+  c.setTransform(dpr*z,0,0,dpr*z,dpr*ox,dpr*oy);
+  c.save();c.shadowColor='rgba(0,0,0,.3)';c.shadowBlur=16*dpr;c.shadowOffsetY=3*dpr;c.fillStyle='#fff';c.fillRect(0,0,pg.w,pg.h);c.restore();
+  c.save();c.beginPath();c.rect(0,0,pg.w,pg.h);c.clip();
+  drawBg(c,pg);const im=imgs.get(pg.id);if(im)c.drawImage(im,0,0,pg.w,pg.h);
+  const x0=-ox/z,y0=-oy/z,x1=x0+SW/z,y1=y0+SH/z;
+  for(const s of pg.strokes){const b=s.b,m=s.w;if(b&&(b[2]+m<x0||b[0]-m>x1||b[3]+m<y0||b[1]-m>y1))continue;drawStroke(c,s);}
+  c.restore();
+}
+function frame(){
+  raf=0;if(!nb)return;
+  if(layerDirty){renderLayer();layerDirty=false;}
+  const c=ctx,pg=page();c.setTransform(1,0,0,1,0,0);c.drawImage(cache,0,0);
+  if(drawing&&drawing.s&&drawing.s.p.length){c.save();c.setTransform(dpr*z,0,0,dpr*z,dpr*ox,dpr*oy);c.beginPath();c.rect(0,0,pg.w,pg.h);c.clip();drawStroke(c,drawing.s);c.restore();}
+  if(hover&&(tool==='er'||(drawing&&drawing.mode==='er'))){c.setTransform(dpr,0,0,dpr,0,0);c.beginPath();c.arc(hover.x,hover.y,W.er/2*z,0,6.2832);c.lineWidth=1.5;c.strokeStyle='#e11d48';c.stroke();}
+}
+
+/* puntatori: penna e mouse disegnano; le dita spostano e zoomano (o disegnano se attivato) */
+let drawing=null,lastPen=0,penDown=false,hinted=false;
+const ptrs=new Map();let g=null;
+const posOf=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+const toPage=e=>{const p=posOf(e);return [(p.x-ox)/z,(p.y-oy)/z];};
+function startStroke(e){
+  const m=(e.pointerType==='pen'&&((e.buttons&32)||e.button===5))?'er':tool;
+  drawing={id:e.pointerId,mode:m,type:e.pointerType,lastPr:.5};live=true;
+  if(m==='er'){drawing.removed=[];}else{drawing.s={t:m,c:COL[m],w:W[m],p:[]};}
+  moveStroke(e);
+}
+function moveStroke(e){
+  const evs=(e.getCoalescedEvents&&e.getCoalescedEvents())||[];const list=evs.length?evs:[e];
+  for(const ev of list){
+    const [x,y]=toPage(ev);
+    if(drawing.mode==='er'){eraseAt(x,y);continue;}
+    const p=drawing.s.p,n=p.length;
+    let pr=ev.pointerType==='pen'?Math.max(.05,ev.pressure||.5):.5;pr=drawing.lastPr*.6+pr*.4;drawing.lastPr=pr;
+    if(n&&Math.hypot(x-p[n-3],y-p[n-2])<.7/z)continue;
+    p.push(Math.round(x*10)/10,Math.round(y*10)/10,Math.round(pr*100)/100);
+  }
+  req();
+}
+function segDist(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=clamp(t,0,1);return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));}
+function eraseAt(x,y){
+  const r=W.er/2,st=page().strokes;
+  for(let i=st.length-1;i>=0;i--){
+    const s=st[i],m=r+s.w/2+2,b=s.b;if(b&&(x<b[0]-m||x>b[2]+m||y<b[1]-m||y>b[3]+m))continue;
+    const p=s.p,n=p.length/3;let hit=false;
+    if(n===1)hit=Math.hypot(x-p[0],y-p[1])<=m;
+    else for(let k=1;k<n&&!hit;k++)hit=segDist(x,y,p[k*3-3],p[k*3-2],p[k*3],p[k*3+1])<=m;
+    if(hit){drawing.removed.push({i,s});st.splice(i,1);layerDirty=true;}
+  }
+}
+function endStroke(){
+  if(!drawing)return;const d=drawing;drawing=null;live=false;
+  if(d.mode==='er'){if(d.removed.length){pushAct({k:'del',list:d.removed});}}
+  else if(d.s.p.length){const p=d.s.p;let a=1e9,b=1e9,c=-1e9,e=-1e9;for(let i=0;i<p.length;i+=3){a=Math.min(a,p[i]);c=Math.max(c,p[i]);b=Math.min(b,p[i+1]);e=Math.max(e,p[i+1]);}
+    d.s.b=[a,b,c,e];page().strokes.push(d.s);pushAct({k:'add',s:d.s});}
+  layerDirty=true;req();save();
+}
+function pushAct(a){const h=H();h.u.push(a);if(h.u.length>300)h.u.shift();h.r.length=0;updUndo();}
+function undo(){
+  const h=H(),a=h.u.pop();if(!a)return;const pg=page();
+  if(a.k==='add'){const i=pg.strokes.indexOf(a.s);if(i>=0)pg.strokes.splice(i,1);}
+  else if(a.k==='del'){for(let j=a.list.length-1;j>=0;j--)pg.strokes.splice(a.list[j].i,0,a.list[j].s);}
+  else if(a.k==='clear'){pg.strokes=a.old;}
+  h.r.push(a);layerDirty=true;req();updUndo();save();
+}
+function redo(){
+  const h=H(),a=h.r.pop();if(!a)return;const pg=page();
+  if(a.k==='add'){pg.strokes.push(a.s);}
+  else if(a.k==='del'){for(const it of a.list)pg.strokes.splice(it.i,1);}
+  else if(a.k==='clear'){pg.strokes=[];}
+  h.u.push(a);layerDirty=true;req();updUndo();save();
+}
+function updUndo(){if(!nb)return;const h=H();$('#eUndo').disabled=!h.u.length;$('#eRedo').disabled=!h.r.length;}
+
+function gestureUpdate(){
+  const t=[...ptrs.values()].filter(p=>p.touch&&!p.draw).slice(0,2);
+  if(!t.length){g=null;return;}
+  const cxp=t.reduce((a,p)=>a+p.x,0)/t.length,cyp=t.reduce((a,p)=>a+p.y,0)/t.length;
+  const d=t.length===2?Math.hypot(t[0].x-t[1].x,t[0].y-t[1].y):0;
+  if(g&&g.n===t.length){
+    ox+=cxp-g.x;oy+=cyp-g.y;
+    if(t.length===2&&g.d>10&&d>10){const nz=clamp(z*d/g.d,.15,8);ox=cxp-(cxp-ox)*(nz/z);oy=cyp-(cyp-oy)*(nz/z);z=nz;}
+    clampPan();layerDirty=true;req();
+  }
+  g={x:cxp,y:cyp,d,n:t.length};
+}
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointerdown',e=>{
+  if(!nb)return;e.preventDefault();closeMenu();
+  const t=e.pointerType;
+  if(t==='pen'){lastPen=performance.now();penDown=true;}
+  if(t==='touch'&&(penDown||performance.now()-lastPen<600))return; /* palmo ignorato mentre si usa la penna */
+  if(t==='touch'&&!fingerDraw&&!hinted&&!lastPen){hinted=true;toast('Il dito sposta e zooma la pagina. Per scriverci anche col dito: Altro, poi «Disegna anche col dito».',6000);}
+  if(t==='mouse'&&e.button!==0)return;
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+  const p=posOf(e);
+  const rec={x:p.x,y:p.y,touch:t==='touch',draw:false};ptrs.set(e.pointerId,rec);
+  const canDraw=t==='pen'||t==='mouse'||(t==='touch'&&fingerDraw&&ptrs.size===1);
+  if(t==='touch'&&drawing&&drawing.type==='touch'){drawing=null;live=false;layerDirty=true;req();} /* secondo dito: era un gesto */
+  if(canDraw&&!drawing){rec.draw=true;startStroke(e);}
+  else if(rec.touch){rec.draw=false;g=null;gestureUpdate();}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!nb)return;
+  if(e.pointerType==='pen')lastPen=performance.now();
+  if(e.pointerType!=='touch'){const p=posOf(e);hover={x:p.x,y:p.y};if(tool==='er'||(drawing&&drawing.mode==='er'))req();}
+  const rec=ptrs.get(e.pointerId);if(!rec)return;
+  const p=posOf(e);rec.x=p.x;rec.y=p.y;
+  if(drawing&&drawing.id===e.pointerId){e.preventDefault();moveStroke(e);}
+  else if(rec.touch&&!rec.draw)gestureUpdate();
+});
+function up(e){
+  if(e.pointerType==='pen'){penDown=false;lastPen=performance.now();}
+  const rec=ptrs.get(e.pointerId);if(!rec)return;
+  if(drawing&&drawing.id===e.pointerId)endStroke();
+  ptrs.delete(e.pointerId);g=null;gestureUpdate();
+}
+cv.addEventListener('pointerup',up);
+cv.addEventListener('pointercancel',e=>{if(drawing&&drawing.id===e.pointerId){drawing=null;live=false;layerDirty=true;req();}up(e);});
+cv.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch'&&!drawing){hover=null;req();}});
+cv.addEventListener('wheel',e=>{e.preventDefault();const p=posOf(e);
+  if(e.ctrlKey)zoomAt(p.x,p.y,Math.exp(-e.deltaY*.01));else{ox-=e.deltaX;oy-=e.deltaY;clampPan();layerDirty=true;req();}},{passive:false});
+document.addEventListener('keydown',e=>{
+  if(!nb||$('#editor').hidden||/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();e.shiftKey?redo():undo();}
+  else if((e.ctrlKey||e.metaKey)&&e.key==='y'){e.preventDefault();redo();}
+});
+
+/* strumenti */
+function buildColors(){
+  const box=$('#colors');box.innerHTML='';
+  PALETTE.forEach(c=>{const b=document.createElement('button');b.className='sw';b.style.background=c;b.dataset.c=c;b.setAttribute('aria-label','Colore '+c);
+    b.onclick=()=>{if(tool==='er')return;COL[tool]=c;updTool();};box.append(b);});
+  const i=document.createElement('input');i.type='color';i.id='eColor';i.setAttribute('aria-label','Colore personalizzato');i.value='#111827';
+  i.oninput=()=>{if(tool!=='er'){COL[tool]=i.value;updTool();}};box.append(i);
+}
+function setTool(t){tool=t;const[a,b]=RANGE[t];const s=$('#eSize');s.min=a;s.max=b;s.value=W[t];updTool();}
+function updTool(){
+  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===tool));
+  const box=$('#colors');box.classList.toggle('colorsOff',tool==='er');
+  box.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',tool!=='er'&&b.dataset.c.toLowerCase()===(COL[tool]||'').toLowerCase()));
+  if(tool!=='er')$('#eColor').value=COL[tool];
+  const d=$('#sizeDot');const px=clamp(W[tool]*(tool==='pen'?1.4:.6),3,28);d.style.width=d.style.height=px+'px';
+  d.style.background=tool==='er'?'#e11d48':(COL[tool]||'#fff');d.style.opacity=tool==='hl'?.6:1;
+  if(nb)req();
+}
+document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$('#eSize').oninput=e=>{W[tool]=+e.target.value;updTool();};
+$('#eUndo').onclick=undo;$('#eRedo').onclick=redo;
+$('#eZin').onclick=()=>zoomAt(SW/2,SH/2,1.3);$('#eZout').onclick=()=>zoomAt(SW/2,SH/2,1/1.3);
+$('#eFit').onclick=()=>fit(fitMode==='w'?'p':'w');
+$('#eTitle').onchange=e=>{if(nb){nb.title=e.target.value.trim()||'Senza titolo';e.target.value=nb.title;save();}};
+
+/* pagine */
+function updInfo(){$('#pInfo').textContent=(cur+1)+' / '+nb.pages.length;$('#pPrev').disabled=cur===0;$('#pNext').disabled=cur===nb.pages.length-1;updUndo();}
+function gotoPage(i){cur=clamp(i,0,nb.pages.length-1);nb.last=cur;drawing=null;ptrs.clear();fit();updInfo();save();}
+function addBlank(){const p=newPage(nb.w,nb.h,nb.bg);nb.pages.splice(cur+1,0,p);gotoPage(cur+1);toast('Pagina aggiunta');}
+async function delPage(){
+  if(nb.pages.length===1){toast('Un quaderno deve avere almeno una pagina.');return;}
+  if(!await ask('Eliminare questa pagina?','Pagina '+(cur+1)+' di '+nb.pages.length+'. L’azione non si può annullare.','Elimina',true))return;
+  const p=nb.pages.splice(cur,1)[0];if(p.hasImg){imgs.delete(p.id);store.delImg(p.id);}hist.delete(p.id);gotoPage(Math.min(cur,nb.pages.length-1));
+}
+async function clearPage(){
+  const pg=page();if(!pg.strokes.length){toast('La pagina è già vuota.');return;}
+  if(!await ask('Cancellare tutto il tratto?','Resta lo sfondo. Potrai tornare indietro con «Annulla».','Cancella',true))return;
+  pushAct({k:'clear',old:pg.strokes});pg.strokes=[];layerDirty=true;req();save();
+}
+function setBg(t){const pg=page();pg.bg=t;nb.bg=t;layerDirty=true;req();save();}
+$('#pPrev').onclick=()=>gotoPage(cur-1);$('#pNext').onclick=()=>gotoPage(cur+1);$('#pAdd').onclick=addBlank;
+$('#eMore').onclick=e=>{
+  const pg=page();
+  menu(e.currentTarget,[
+    {label:'Pagina',head:true},
+    {label:'Aggiungi pagina bianca',fn:addBlank},
+    {label:'Inserisci foto come pagina',fn:()=>$('#photoIn').click()},
+    {label:'Cancella tutto il tratto',fn:clearPage},
+    {label:'Elimina questa pagina',fn:delPage,danger:true},
+    '-',{label:'Sfondo',head:true},
+    ...Object.entries(BGS).map(([k,v])=>({label:v,on:pg.bg===k,fn:()=>setBg(k)})),
+    '-',{label:'Penna e dita',head:true},
+    {label:'Disegna anche col dito',on:fingerDraw,fn:()=>{fingerDraw=!fingerDraw;try{localStorage.setItem('taccuino.dito',fingerDraw?'1':'0');}catch(_){}toast(fingerDraw?'Col dito si disegna; con due dita si sposta e si zooma.':'Solo la penna disegna; il dito sposta e zooma.');}},
+    '-',{label:'Esporta e condividi',head:true},
+    {label:'Questa pagina come immagine (PNG)',fn:exportPng},
+    {label:'Tutto il quaderno in PDF',fn:exportPdf},
+    {label:'Quaderno per i colleghi (.taccuino)',fn:()=>exportNb(nb)}
+  ]);
+};
+
+/* salvataggio */
+let saveT=0,dirty=false;
+function save(){dirty=true;clearTimeout(saveT);saveT=setTimeout(flush,700);}
+async function flush(){
+  if(!nb||!dirty)return;dirty=false;nb.updated=Date.now();
+  if(cur===0||!nb.thumb)nb.thumb=makeThumb(nb.pages[0]);
+  try{await store.put(nb);}catch(e){toast('Salvataggio non riuscito: spazio esaurito o archivio non disponibile.');}
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush();});
+addEventListener('pagehide',flush);
+
+/* ---------- esportazione ---------- */
+const safeName=s=>(s||'quaderno').replace(/[^\p{L}\p{N}\-_ ]+/gu,'').trim().replace(/\s+/g,'-').slice(0,60)||'quaderno';
+function offer(blob,name,preview,hint){
+  const url=URL.createObjectURL(blob);
+  const a0=document.createElement('a');a0.href=url;a0.download=name;document.body.append(a0);a0.click();a0.remove();
+  modal((m,close)=>{
+    const h=document.createElement('h2');h.textContent='File pronto';m.append(h);
+    if(preview){const i=document.createElement('img');i.className='prev';i.src=preview;i.alt='Anteprima';m.append(i);}
+    const p=document.createElement('p');p.textContent=hint||('Il download di «'+name+'» dovrebbe essere partito. Se non succede, usa il pulsante qui sotto.');m.append(p);
+    const a=document.createElement('a');a.className='btn primary';a.href=url;a.download=name;a.textContent='Scarica '+name;a.style.display='grid';a.style.placeItems='center';a.style.textDecoration='none';
+    const ac=document.createElement('div');ac.className='acts';ac.append(btn('Chiudi','',close));m.append(a,ac);
+  });
+}
+async function exportPng(){
+  const c=renderPageCanvas(page(),1.5),url=c.toDataURL('image/png');
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));
+  offer(blob,safeName(nb.title)+'-pag'+(cur+1)+'.png',url,'Se il download non parte, tieni premuta l’immagine e scegli «Scarica immagine».');
+}
+const b64=d=>{const s=atob(d.split(',')[1]),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;};
+function buildPdf(pages){
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const add=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};
+  const obj=(id,fn)=>{offs[id]=len;add(id+' 0 obj\n');fn();add('\nendobj\n');};
+  const N=pages.length;add('%PDF-1.4\n');
+  obj(1,()=>add('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>add('<< /Type /Pages /Count '+N+' /Kids ['+pages.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] >>'));
+  pages.forEach((p,i)=>{
+    const pw=(p.w*.48).toFixed(2),ph=(p.h*.48).toFixed(2),pid=3+3*i,cid=4+3*i,iid=5+3*i;
+    obj(pid,()=>add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${iid} 0 R >> >> /Contents ${cid} 0 R >>`));
+    const cs=`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+    obj(cid,()=>add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+    obj(iid,()=>{add(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.data.length} >>\nstream\n`);add(p.data);add('\nendstream');});
+  });
+  const xref=len,total=3*N+3;let x='xref\n0 '+total+'\n0000000000 65535 f \n';
+  for(let id=1;id<total;id++)x+=String(offs[id]).padStart(10,'0')+' 00000 n \n';
+  x+=`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;add(x);
+  return new Blob(parts,{type:'application/pdf'});
+}
+async function exportPdf(){
+  const out=[];
+  for(let i=0;i<nb.pages.length;i++){
+    toast('Preparo il PDF… pagina '+(i+1)+' di '+nb.pages.length,60000);await wait(20);
+    const pg=nb.pages[i],c=renderPageCanvas(pg,1);out.push({data:b64(c.toDataURL('image/jpeg',.9)),w:c.width,h:c.height});
+  }
+  $('#toast').hidden=true;offer(buildPdf(out),safeName(nb.title)+'.pdf');
+}
+async function exportNb(n){
+  const o={app:'taccuino',v:1,nb:n,imgs:{}};
+  for(const p of n.pages)if(p.hasImg)o.imgs[p.id]=await store.getImg(p.id);
+  offer(new Blob([JSON.stringify(o)],{type:'application/json'}),safeName(n.title)+'.taccuino',null,'Manda questo file ai colleghi (WhatsApp, email): in Taccuino lo aprono con «Importa».');
+}
+
+/* ---------- importazione ---------- */
+const fileToDataURL=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(f);});
+async function imageFile(file){
+  const im=await loadImage(await fileToDataURL(file));let w=im.naturalWidth,h=im.naturalHeight;const s=Math.min(1,1800/Math.max(w,h));
+  const c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+  return {data:c.toDataURL('image/jpeg',.85),w:c.width,h:c.height};
+}
+function logical(w,h){const k=PH/Math.max(w,h);return [Math.round(w*k),Math.round(h*k)];}
+async function loadPdfJs(){
+  if(window.pdfjsLib)return window.pdfjsLib;
+  await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.append(s);});
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';return pdfjsLib;
+}
+async function pdfFile(file){
+  const lib=await loadPdfJs(),doc=await lib.getDocument({data:await file.arrayBuffer()}).promise,out=[],n=Math.min(doc.numPages,60);
+  for(let i=1;i<=n;i++){
+    toast('Importo il PDF… pagina '+i+' di '+n,60000);
+    const p=await doc.getPage(i),v1=p.getViewport({scale:1}),v=p.getViewport({scale:1800/Math.max(v1.width,v1.height)});
+    const c=document.createElement('canvas');c.width=Math.round(v.width);c.height=Math.round(v.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    await p.render({canvasContext:x,viewport:v}).promise;out.push({data:c.toDataURL('image/jpeg',.82),w:c.width,h:c.height});
+  }
+  $('#toast').hidden=true;if(doc.numPages>n)toast('Importate le prime '+n+' pagine.');return out;
+}
+async function notebookFromImages(title,list){
+  const n={id:uid(),title,created:Date.now(),updated:Date.now(),w:PW,h:PH,bg:'bianco',last:0,thumb:null,pages:[]};
+  for(const it of list){const [w,h]=logical(it.w,it.h);const p=newPage(w,h,'bianco');await attachImage(p,it.data);n.pages.push(p);}
+  n.thumb=makeThumb(n.pages[0]);await store.put(n);return n;
+}
+async function importNb(file){
+  const o=JSON.parse(await file.text());if(o.app!=='taccuino'||!o.nb)throw new Error('file non valido');
+  const n=o.nb,map={};n.id=uid();n.title=(n.title||'Quaderno')+' (importato)';
+  for(const p of n.pages){const old=p.id;p.id=uid();map[old]=p.id;if(p.hasImg&&o.imgs[old])await store.putImg(p.id,o.imgs[old]);else p.hasImg=false;}
+  n.updated=Date.now();await store.put(n);return n;
+}
+async function handleFiles(files){
+  let last=null;
+  for(const f of files){
+    try{
+      const nm=f.name.toLowerCase();
+      if(nm.endsWith('.taccuino'))last=await importNb(f);
+      else if(f.type==='application/pdf'||nm.endsWith('.pdf'))last=await notebookFromImages(f.name.replace(/\.pdf$/i,''),await pdfFile(f));
+      else if(f.type.startsWith('image/'))last=await notebookFromImages(f.name.replace(/\.[^.]+$/,''),[await imageFile(f)]);
+      else toast('Formato non supportato: '+f.name);
+    }catch(e){$('#toast').hidden=true;toast('Non riesco a importare «'+f.name+'»'+(e.message==='offline'?': per i PDF serve la connessione a internet.':'.'),5000);}
+  }
+  if(last){toast('Importato: '+last.title);renderHome();}
+}
+$('#fileIn').onchange=async e=>{const f=[...e.target.files];e.target.value='';if(f.length)await handleFiles(f);};
+$('#photoIn').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f||!nb)return;
+  try{const it=await imageFile(f),[w,h]=logical(it.w,it.h),p=newPage(w,h,'bianco');await attachImage(p,it.data);nb.pages.splice(cur+1,0,p);gotoPage(cur+1);toast('Foto inserita come nuova pagina');}
+  catch(e2){toast('Non riesco a leggere la foto.');}
+};
+
+/* ---------- libreria ---------- */
+const fmtDate=t=>new Date(t).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'});
+async function renderHome(){
+  const list=(await store.all()).sort((a,b)=>b.updated-a.updated),grid=$('#grid');grid.innerHTML='';$('#empty').hidden=list.length>0;
+  for(const n of list){
+    const c=document.createElement('div');c.className='card';c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-label','Apri '+n.title);
+    const th=document.createElement('div');th.className='th';
+    if(n.thumb){const i=document.createElement('img');i.src=n.thumb;i.alt='';th.append(i);}else th.textContent='Vuoto';
+    const info=document.createElement('div');info.className='info';
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=n.title;
+    const mt=document.createElement('div');mt.className='mt';mt.textContent=n.pages.length+(n.pages.length===1?' pagina':' pagine')+' · '+fmtDate(n.updated);
+    info.append(nm,mt);
+    const d=document.createElement('button');d.className='dots';d.setAttribute('aria-label','Opzioni di '+n.title);d.innerHTML=ic('more');
+    d.onclick=ev=>{ev.stopPropagation();menu(d,[
+      {label:'Apri',fn:()=>openNb(n)},
+      {label:'Rinomina',fn:async()=>{const t=await askText('Rinomina quaderno',n.title);if(t){n.title=t;n.updated=Date.now();await store.put(n);renderHome();}}},
+      {label:'Esporta per i colleghi (.taccuino)',fn:()=>exportNb(n)},
+      '-',{label:'Elimina',danger:true,fn:async()=>{if(await ask('Eliminare «'+n.title+'»?','Il quaderno e tutte le sue pagine verranno cancellati da questo dispositivo.','Elimina',true)){await store.delNb(n);renderHome();}}}
+    ]);};
+    c.append(th,info,d);c.onclick=()=>openNb(n);c.onkeydown=e=>{if(e.key==='Enter')openNb(n);};grid.append(c);
+  }
+}
+function newDialog(){
+  modal((m,close)=>{
+    let orient='v',bg='quadretti';
+    const h=document.createElement('h2');h.textContent='Nuovo quaderno';
+    const lt=document.createElement('label');lt.className='f';lt.textContent='Titolo';
+    const ti=document.createElement('input');ti.type='text';ti.value='Appunti '+new Date().toLocaleDateString('it-IT',{day:'numeric',month:'short'});lt.append(ti);
+    const mk=(label,opts,get,set)=>{const w=document.createElement('div');const l=document.createElement('div');l.textContent=label;l.style.fontWeight='600';l.style.marginBottom='6px';
+      const ps=document.createElement('div');ps.className='pills';
+      opts.forEach(([k,t])=>{const b=document.createElement('button');b.className='pill';b.textContent=t;b.onclick=()=>{set(k);ps.querySelectorAll('.pill').forEach(x=>x.classList.toggle('on',x===b));};if(get()===k)b.classList.add('on');ps.append(b);});
+      w.append(l,ps);return w;};
+    const a=document.createElement('div');a.className='acts';
+    a.append(btn('Annulla','',close),btn('Crea','primary',async()=>{const n=newNotebook(ti.value.trim()||'Senza titolo',orient,bg);await store.put(n);close();openNb(n);}));
+    m.append(h,lt,mk('Orientamento',[['v','Verticale'],['o','Orizzontale']],()=>orient,v=>orient=v),mk('Sfondo',Object.entries(BGS),()=>bg,v=>bg=v),a);
+  });
+}
+$('#bNew').onclick=newDialog;$('#bImport').onclick=()=>$('#fileIn').click();$('#bCourse').onclick=()=>{location.hash='corso';};
+
+async function openNb(n){
+  try{await loadImgs(n);}catch(e){toast('Alcune immagini del quaderno non si caricano.');}
+  nb=n;cur=clamp(n.last||0,0,n.pages.length-1);hist.clear();drawing=null;ptrs.clear();dirty=false;
+  $('#eTitle').value=n.title;setTool(tool);
+  if(location.hash!=='#quaderno')location.hash='quaderno';else route();
+}
+function closeEditor(){if(nb){clearTimeout(saveT);dirty=true;flush();}nb=null;drawing=null;ptrs.clear();}
+
+/* ---------- corso di disegno ---------- */
+const GC='#6a8fdc';
+const dots=a=>`<g fill="none" stroke="${GC}" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 13">${a}</g>`;
+const faint=(a,o=.4)=>`<g fill="none" stroke="${GC}" stroke-width="2.5" stroke-linecap="round" opacity="${o}">${a}</g>`;
+const ln=(a,b,c,d)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`;
+const ci=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`;
+const el=(x,y,a,b)=>`<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}"/>`;
+const tx=(x,y,t,s=30,an='start')=>`<text x="${x}" y="${y}" font-family="sans-serif" font-size="${s}" fill="#7d8da3" text-anchor="${an}">${t}</text>`;
+const wrap=(t,sub,body)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1754" width="1240" height="1754"><text x="70" y="105" font-family="sans-serif" font-size="44" font-weight="700" fill="#4a5a70">${t}</text><text x="70" y="150" font-family="sans-serif" font-size="27" fill="#7d8da3">${sub}</text>${body}</svg>`;
+const arrow=(x1,y1,x2,y2)=>{const a=Math.atan2(y2-y1,x2-x1),l=22;return ln(x1,y1,x2,y2)+ln(x2,y2,x2-l*Math.cos(a-.5),y2-l*Math.sin(a-.5))+ln(x2,y2,x2-l*Math.cos(a+.5),y2-l*Math.sin(a+.5));};
+function faceGuide(cx,cy,r){
+  const eye=cy+.15*r,chin=cy+1.65*r;
+  const d=ci(cx,cy,r)+`<path d="M${cx-.82*r} ${cy+.57*r} Q${cx-.5*r} ${cy+1.5*r} ${cx} ${chin} Q${cx+.5*r} ${cy+1.5*r} ${cx+.82*r} ${cy+.57*r}"/>`+el(cx-r*.99,cy+.45*r,.11*r,.28*r)+el(cx+r*.99,cy+.45*r,.11*r,.28*r);
+  const f=ln(cx,cy-r-18,cx,chin+10)+ln(cx-.95*r,eye,cx+.95*r,eye)+ln(cx-.3*r,cy+.75*r,cx+.3*r,cy+.75*r)+ln(cx-.4*r,cy+1.05*r,cx+.4*r,cy+1.05*r);
+  return dots(d)+faint(f,.45);
+}
+function eyeGuide(cx,cy,dx,dy){
+  const d=`<path d="M${cx-100} ${cy+10} Q${cx} ${cy-85} ${cx+100} ${cy+10}"/><path d="M${cx-100} ${cy+10} Q${cx} ${cy+45} ${cx+100} ${cy+10}"/>`+ci(cx+dx,cy-8+dy,42);
+  return dots(d)+faint(`<path d="M${cx-100} ${cy-90} Q${cx} ${cy-140} ${cx+100} ${cy-80}"/>`,.35);
+}
+function star(cx,cy,R,r){let p='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,k=i%2?r:R;p+=(i?'L':'M')+(cx+k*Math.cos(a)).toFixed(1)+' '+(cy+k*Math.sin(a)).toFixed(1);}return `<path d="${p}Z"/>`;}
+const LESSONS=[
+{t:'Linee e controllo della mano',lv:'Base',min:15,
+ intro:'Prima di disegnare un personaggio serve una mano che obbedisce. Questo esercizio costruisce fiducia nel tratto.',
+ steps:['Appoggia il polso e muovi tutto l’avambraccio: il tratto lungo nasce dalla spalla e dal gomito, non dal polso.','Nella prima zona collega ogni coppia di punti con una sola linea veloce. Meglio una linea decisa e un po’ storta che una tremolante.','Nella seconda zona ripassa le onde senza fermarti, tenendo lo stesso ritmo.','Nella terza chiudi ogni cerchio in un solo gesto. Fai un paio di giri sopra il foglio senza toccarlo, poi scendi con la penna.'],
+ tip:'Cinque minuti ogni giorno valgono più di un’ora una volta al mese. Con «Annulla» puoi sbagliare quanto vuoi.',
+ guide:()=>{let s='',d='';for(let i=0;i<9;i++){const y=250+i*62;s+=ci(90,y,9)+ci(1150,y+(i%3-1)*60,9);}
+  for(let i=0;i<4;i++){const y=930+i*95;d+=`<path d="M90 ${y} C290 ${y-70} 440 ${y+70} 620 ${y} S960 ${y-70} 1150 ${y}"/>`;}
+  for(let i=0;i<6;i++){d+=ci(160+i*184,1500,62)+ci(160+i*184,1650,62);}
+  return wrap('Lezione 1 · Linee e controllo','Collega i punti, ripassa le onde, chiudi i cerchi in un solo gesto',faint(s,.9)+dots(d)+tx(90,215,'1 · Linee dritte')+tx(90,880,'2 · Onde')+tx(90,1400,'3 · Cerchi'));}},
+{t:'Forme base e volume',lv:'Base',min:20,
+ intro:'Ogni oggetto, anche un volto, si scompone in sfere, cubi, cilindri e coni. Imparare a farli «girare» nello spazio è la base del disegno.',
+ steps:['Ripassa il cerchio e trasformalo in una sfera aggiungendo una linea curva che segue la sua rotondità.','Nel cubo collega i quattro angoli del quadrato davanti con quelli del quadrato dietro.','Nel cilindro unisci le due ellissi con due linee verticali. L’ellisse in basso si vede solo per metà.','Nel cono unisci i due lati della base alla punta.','Nella fila in basso scegli da dove arriva la luce (la freccia) e ombreggia il lato opposto, poi aggiungi l’ombra a terra.'],
+ tip:'Disegna anche le linee nascoste con un tratto leggero: ti aiutano a capire la costruzione.',
+ guide:()=>{let d=ci(330,500,150)+`<rect x="740" y="400" width="220" height="220"/><rect x="820" y="330" width="220" height="220"/>`+el(330,880,130,40)+el(330,1180,130,40)+el(860,1180,130,40)+ci(860,860,8)+ci(330,1530,120)+el(480,1665,140,30)+ci(900,1530,120)+el(1050,1665,140,30);
+  return wrap('Lezione 2 · Forme base e volume','Sfera, cubo, cilindro, cono: dal contorno al volume',dots(d)+faint(arrow(150,1370,240,1440),.8)+faint(arrow(720,1370,810,1440),.8)+tx(330,330,'Sfera',30,'middle')+tx(890,285,'Cubo',30,'middle')+tx(330,790,'Cilindro',30,'middle')+tx(860,790,'Cono',30,'middle')+tx(620,1340,'Luce e ombra',30,'middle'));}},
+{t:'Prospettiva a un punto',lv:'Intermedio',min:25,
+ intro:'Corridoi, strade e stanze viste di fronte. Tutte le linee che vanno in profondità convergono in un solo punto di fuga, sull’orizzonte.',
+ steps:['Il punto di fuga è già segnato sulla linea dell’orizzonte: ogni linea in profondità deve puntare lì.','Collega gli angoli di ciascun quadrato frontale al punto di fuga con righe leggere.','Scegli la profondità del cubo con una linea orizzontale e una verticale tra i raggi: così ottieni la faccia posteriore, più piccola.','Ripassa con tratto deciso solo le linee che formano il solido.','Avanzato: disegna una stanza con pareti e pavimento a quadrotti, usando gli stessi raggi.'],
+ tip:'Se l’orizzonte è sopra il cubo lo vedi dal basso, se è sotto lo vedi dall’alto. Un cubo che attraversa l’orizzonte è all’altezza dei tuoi occhi.',
+ guide:()=>{let r='';for(let x=70;x<=1170;x+=110)r+=ln(620,760,x,190)+ln(620,760,x,1700);for(let y=190;y<=1700;y+=150)r+=ln(620,760,70,y)+ln(620,760,1170,y);
+  const d=`<rect x="150" y="360" width="220" height="220"/><rect x="850" y="650" width="220" height="220"/><rect x="200" y="1000" width="220" height="220"/><rect x="800" y="1100" width="260" height="260"/>`;
+  return wrap('Lezione 3 · Prospettiva a un punto','Punto di fuga al centro dell’orizzonte',faint(r,.16)+faint(ln(70,760,1170,760),.7)+faint(ci(620,760,13),.9)+dots(d)+tx(640,735,'Punto di fuga',26)+tx(80,745,'Orizzonte',26));}},
+{t:'Prospettiva a due punti',lv:'Intermedio',min:25,
+ intro:'Per edifici e oggetti visti «d’angolo». Qui i punti di fuga sono due, entrambi sull’orizzonte.',
+ steps:['La linea verticale tratteggiata è lo spigolo più vicino a te.','Dalla cima e dal fondo dello spigolo traccia raggi leggeri verso i due punti di fuga, a sinistra e a destra.','Chiudi le due pareti con una verticale per lato: le verticali restano sempre verticali.','Aggiungi tetto, porte e finestre seguendo gli stessi raggi.','Ripeti con il secondo edificio più in basso, dove l’orizzonte lo fa vedere dall’alto.'],
+ tip:'Tieni i punti di fuga molto distanti tra loro: se sono vicini l’oggetto sembra deformato.',
+ guide:()=>{let r='';for(const[x,y1,y2]of[[620,420,1000],[900,1100,1560]])for(const vx of[110,1130])r+=ln(vx,700,x,y1)+ln(vx,700,x,y2);
+  const d=ln(620,420,620,1000)+ln(900,1100,900,1560);
+  return wrap('Lezione 4 · Prospettiva a due punti','Due punti di fuga sull’orizzonte',faint(r,.3)+faint(ln(60,700,1180,700),.7)+faint(ci(110,700,13)+ci(1130,700,13),.9)+dots(d)+tx(110,670,'PdF sinistro',24)+tx(1130,670,'PdF destro',24,'end')+tx(80,690,'',1));}},
+{t:'Il volto manga di fronte',lv:'Base',min:30,
+ intro:'Uno schema semplice per costruire un volto in proporzione. Poi si personalizza: negli stili manga occhi e mento cambiano molto.',
+ steps:['Il cerchio è il cranio. La linea verticale è l’asse del volto.','La linea orizzontale è la linea degli occhi, appena sotto il centro nei volti giovani.','Le linee dei lati scendono a V arrotondata fino al mento, poco più di un raggio e mezzo sotto il centro.','Il naso sta a circa due quinti del tratto tra occhi e mento, la bocca poco oltre la metà.','Le orecchie stanno tra la linea degli occhi e quella del naso.','I capelli partono dalla sommità del cranio, non dal bordo del viso: dai volume sopra al cerchio.'],
+ tip:'Usa il volto grande per costruire con calma e i due piccoli per esercitarti a mano libera, sempre con la stessa sequenza.',
+ guide:()=>wrap('Lezione 5 · Il volto di fronte','Cerchio, asse, linea degli occhi, mento',faceGuide(620,520,250)+faceGuide(340,1350,165)+faceGuide(900,1350,165)+tx(620,205,'Volto di fronte',28,'middle')+tx(620,1160,'Esercitati qui',28,'middle'))},
+{t:'Occhi e sguardo',lv:'Intermedio',min:30,
+ intro:'Lo sguardo fa vivere un personaggio. Le guide mostrano gli occhi con l’iride in posizioni diverse.',
+ steps:['La palpebra superiore è la linea più spessa e scura: definisce lo sguardo.','L’iride è un cerchio tagliato in alto dalla palpebra, quindi non si vede mai intero.','Pupilla scura al centro e riflesso lasciato bianco. Un riflesso grande e uno piccolo opposto danno profondità.','La palpebra inferiore è un tratto sottile e leggero.','Poche ciglia ricurve verso l’esterno bastano.','Nelle righe 2, 3 e 4 sposta l’iride per guardare a sinistra, a destra e in alto.'],
+ tip:'I due occhi guardano lo stesso punto: controlla che le iridi siano allineate.',
+ guide:()=>{let b='';const rows=[[330,0,0,'Sguardo avanti'],[620,-24,0,'A sinistra'],[910,24,0,'A destra'],[1190,0,-26,'In alto']];
+  for(const[y,dx,dy,l]of rows){b+=eyeGuide(330,y,dx,dy)+eyeGuide(910,y,dx,dy)+tx(620,y-70,l,24,'middle');}
+  b+=`<g transform="translate(620 1590) scale(1.8) translate(-620 -1590)">${eyeGuide(620,1590,0,0)}</g>`+tx(620,1430,'Occhio grande da rifinire',24,'middle');
+  return wrap('Lezione 6 · Occhi e sguardo','Palpebra, iride, pupilla, riflesso',b);}},
+{t:'Espressioni',lv:'Intermedio',min:30,
+ intro:'Le emozioni passano da sopracciglia, occhi e bocca. Il resto del volto resta uguale.',
+ steps:['Gioia: sopracciglia alte e arcuate, occhi socchiusi a mezzaluna, bocca aperta con gli angoli in su.','Rabbia: sopracciglia abbassate verso il centro, occhi stretti, bocca a linea tesa o con i denti.','Sorpresa: sopracciglia molto alte, occhi grandi con iridi piccole, bocca a «o».','Tristezza: parte interna delle sopracciglia alzata, occhi lucidi, angoli della bocca in giù.','Imbarazzo: sopracciglia storte, tratti diagonali sulle guance, bocca ondulata.','Determinazione: sopracciglia dritte e basse, sguardo fisso, mascella serrata.'],
+ tip:'All’inizio spingi l’espressione oltre il realistico: nel manga l’esagerazione è una scelta di stile.',
+ guide:()=>{let b='';const L=['Gioia','Rabbia','Sorpresa','Tristezza','Imbarazzo','Determinazione'];[[330,420],[910,420],[330,860],[910,860],[330,1300],[910,1300]].forEach(([x,y],i)=>{b+=faceGuide(x,y,150)+tx(x,y-175,L[i],28,'middle');});
+  return wrap('Lezione 7 · Espressioni','Stesso volto, sei emozioni',b);}},
+{t:'Corpo a manichino',lv:'Intermedio',min:40,
+ intro:'Prima la posa, poi il personaggio. Il manichino è fatto di ovali e cerchi sulle articolazioni.',
+ steps:['La linea verticale è divisa in otto teste, la misura di molti personaggi adulti e slanciati. Per personaggi più giovani usa cinque o sei teste.','Ripassa l’ovale della testa, quello del torace e il cerchio del bacino.','Le spalle misurano circa una testa e mezza. Il bacino sta a tre teste e mezza dall’alto.','Gomiti all’altezza della vita, polsi all’altezza dell’inguine, ginocchia a circa sei teste.','Per dare movimento inclina la linea delle spalle in direzione opposta a quella dei fianchi.'],
+ tip:'Fai molti manichini veloci, anche di trenta secondi ciascuno: ti insegnano la posa più di un solo disegno rifinito.',
+ guide:()=>{const H0=187.5,Y=k=>150+H0*k;let t='';for(let i=0;i<=8;i++)t+=ln(380,Y(i),860,Y(i));
+  let d=el(620,Y(.5),72,92)+ln(620,Y(1),620,Y(1.3))+ln(490,Y(1.35),750,Y(1.35))+el(620,Y(2.2),105,150)+ci(620,Y(3.4),65)
+   +ln(490,Y(1.35),445,Y(2.9))+ln(445,Y(2.9),430,Y(4))+ln(750,Y(1.35),795,Y(2.9))+ln(795,Y(2.9),810,Y(4))
+   +ln(585,Y(3.6),575,Y(6))+ln(575,Y(6),570,Y(7.6))+ln(655,Y(3.6),665,Y(6))+ln(665,Y(6),670,Y(7.6))
+   +el(545,Y(7.85),55,20)+el(695,Y(7.85),55,20);
+  for(const[x,y]of[[490,Y(1.35)],[750,Y(1.35)],[445,Y(2.9)],[795,Y(2.9)],[430,Y(4)],[810,Y(4)],[575,Y(6)],[665,Y(6)]])d+=ci(x,y,15);
+  let n='';for(let i=0;i<8;i++)n+=tx(340,Y(i+.5)+10,String(i+1),30,'end');
+  return wrap('Lezione 8 · Corpo a manichino','Otto teste di altezza, ovali e articolazioni',faint(ln(620,150,620,1650),.35)+faint(t,.28)+dots(d)+n);}},
+{t:'Inchiostrazione',lv:'Intermedio',min:30,
+ intro:'Ripassare una bozza a «matita» con tratto pulito. Sul tablet le guide puntinate fanno da matita.',
+ steps:['Ripassa le forme guida con la penna, una alla volta.','Contorno esterno più spesso, linee interne e dettagli più sottili. Aumenta lo spessore dal cursore o premendo di più.','Traccia le linee in un gesto continuo e stacca la penna solo agli angoli.','Fai finire le linee con una punta affusolata: alleggerisci la pressione verso la fine.','Non riempire tutto di nero: lascia respirare le zone chiare.'],
+ tip:'Con «Annulla» e la gomma a tratto puoi provare più versioni dello stesso contorno e tenere la migliore.',
+ guide:()=>{const d=`<path d="M130 440 Q330 230 540 440 Q330 620 130 440Z"/><path d="M130 440 Q330 440 540 440"/>`
+  +`<path d="M720 400 L720 590 Q720 650 790 650 L930 650 Q1000 650 1000 590 L1000 400"/>`+el(860,400,140,32)+`<path d="M1000 440 Q1100 440 1100 510 Q1100 580 1000 580"/>`
+  +star(340,900,170,70)
+  +`<path d="M850 990 C670 880 700 760 780 780 C820 790 840 820 850 840 C860 820 880 790 920 780 C1000 760 1030 880 850 990Z"/>`
+  +`<path d="M190 1390 a70 70 0 0 1 20 -140 a90 90 0 0 1 170 -30 a80 80 0 0 1 140 50 a60 60 0 0 1 10 120 Z"/>`
+  +el(850,1330,170,90)+`<path d="M1020 1330 L1130 1250 L1130 1410 Z"/>`+ci(770,1305,12);
+  return wrap('Lezione 9 · Inchiostrazione','Ripassa le tracce con spessori diversi',dots(d));}},
+{t:'Ombre e retini',lv:'Intermedio',min:30,
+ intro:'Dare volume con soli tratti, come nei fumetti in bianco e nero. Quattro modi di ombreggiare la stessa sfera.',
+ steps:['Scegli la direzione della luce (la freccia): il lato opposto sarà il più scuro.','Tratteggio: linee parallele, più fitte dove l’ombra è più scura.','Tratteggio incrociato: un secondo strato di linee ad angolo sopra il primo.','Retino a punti: puntini su una griglia, più grandi e fitti nelle zone scure. Usa la penna sottile e tocchi rapidi.','Sfumato a linee: linee che si diradano verso la luce.','In tutte aggiungi l’ombra a terra: un’ellisse scura dal lato opposto alla luce.'],
+ tip:'Confronta i quattro risultati: quale rende meglio il volume? Il retino a punti è lento ma molto elegante.',
+ guide:()=>{let b='';[['Tratteggio',90,260],['Tratteggio incrociato',650,260],['Retino a punti',90,960],['Sfumato a linee',650,960]].forEach(([l,x,y])=>{const cx=x+250,cy=y+270;
+   b+=faint(`<rect x="${x}" y="${y}" width="500" height="580" rx="14"/>`,.3)+dots(ci(cx,cy,170)+el(cx+90,cy+205,150,28))+faint(arrow(x+60,y+60,x+140,y+140),.8)+tx(x,y-14,l,28);});
+  return wrap('Lezione 10 · Ombre e retini','Una sfera, quattro tecniche',b);}}
+];
+let doneSet=new Set();try{doneSet=new Set(JSON.parse(localStorage.getItem('taccuino.done')||'[]'));}catch(e){}
+const svgUrl=s=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+function showCourse(){
+  show('course');const box=$('#lessons');box.innerHTML='';
+  LESSONS.forEach((L,i)=>{const b=document.createElement('button');b.className='les'+(doneSet.has(i)?' done':'');
+    b.innerHTML='<span class="n"></span><span><b></b><small></small></span>';
+    b.querySelector('.n').textContent=doneSet.has(i)?'✓':String(i+1);b.querySelector('b').textContent=L.t;b.querySelector('small').textContent=L.lv+' · '+L.min+' min';
+    b.onclick=()=>{location.hash='lezione-'+(i+1);};box.append(b);});
+}
+function showLesson(n){
+  const i=n-1,L=LESSONS[i];if(!L){location.hash='corso';return;}
+  show('lesson');$('#lTitle').textContent='Lezione '+n+' · '+L.t;
+  const b=$('#lBody');b.innerHTML='';
+  const left=document.createElement('div'),right=document.createElement('div');
+  const tags=document.createElement('div');tags.className='tags';tags.innerHTML='<span class="tag"></span><span class="tag"></span>';tags.children[0].textContent=L.lv;tags.children[1].textContent=L.min+' minuti';
+  const p=document.createElement('p');p.textContent=L.intro;p.style.maxWidth='62ch';
+  const ol=document.createElement('ol');L.steps.forEach(s=>{const li=document.createElement('li');li.textContent=s;ol.append(li);});
+  const tip=document.createElement('div');tip.className='tip';const tb=document.createElement('b');tb.textContent='Consiglio';tip.append(tb,document.createElement('br'),L.tip);
+  const acts=document.createElement('div');acts.className='row';acts.style.marginTop='18px';
+  acts.append(btn('Esercitati su una pagina guida','primary',async()=>{
+    const q={id:uid(),title:'Lezione '+n+' · '+L.t,created:Date.now(),updated:Date.now(),w:PW,h:PH,bg:'bianco',last:0,thumb:null,pages:[]};
+    const g1=newPage(PW,PH,'bianco');await attachImage(g1,svgUrl(L.guide()));q.pages.push(g1,newPage(PW,PH,'quadretti'));
+    q.thumb=makeThumb(g1);await store.put(q);openNb(q);}),
+    btn(doneSet.has(i)?'Segnata come fatta':'Segna come fatta','',()=>{doneSet.has(i)?doneSet.delete(i):doneSet.add(i);try{localStorage.setItem('taccuino.done',JSON.stringify([...doneSet]));}catch(e){}showLesson(n);}));
+  left.append(tags,p,ol,tip,acts);
+  const gd=document.createElement('div');gd.className='guide';const im=document.createElement('img');im.alt='Anteprima della pagina guida';im.src=svgUrl(L.guide());gd.append(im);right.append(gd);
+  b.append(left,right);
+}
+$('#cBack').onclick=()=>{location.hash='';};$('#lBack').onclick=()=>{location.hash='corso';};
+
+/* ---------- navigazione ---------- */
+function show(id){for(const s of document.querySelectorAll('.screen'))s.hidden=s.id!==id;if(id==='editor'){requestAnimationFrame(()=>{resize();fit();updInfo();});}}
+function route(){
+  const h=location.hash.slice(1);closeMenu();
+  if(h!=='quaderno'&&nb)closeEditor();
+  if(h==='corso')showCourse();
+  else if(h.startsWith('lezione-'))showLesson(+h.slice(8));
+  else if(h==='quaderno'&&nb)show('editor');
+  else{if(h==='quaderno'){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}show('home');renderHome();}
+}
+addEventListener('hashchange',route);
+$('#eBack').onclick=()=>{location.hash='';};
+$('#ver').textContent=VERSION;
+
+(async function init(){
+  buildColors();setTool('pen');readTheme();
+  await store.open();
+  if(!store.ok)toast('Questo browser non permette di salvare i quaderni: i dati andranno persi alla chiusura.',6000);
+  route();
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+})();
+</script>
+
+</body>
+</html>
