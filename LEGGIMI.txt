@@ -1,25 +1,44 @@
-TACCUINO - versione 0.1.0
+TACCUINO - versione 0.2.0
 Quaderni a penna per tablet Android. Gratis, senza account, in italiano.
+
+NOVITA' DELLA 0.2.0
+  - Pressione piu' fine: il tratto segue la pressione in modo continuo (sottile all'inizio e alla fine,
+    spesso al centro), con velocita' e inclinazione della penna.
+  - 7 penne: sfera, gel, stilografica, pennarello fine, pennino G (manga), pennello (brush pen),
+    calligrafica.
+  - 8 matite per grado: 4H, 2H, H, HB, B, 2B, 4B, 6B. Piu' tenere = piu' scure e piu' larghe.
+    Ogni matita ha la grana della carta; premendo di piu' scurisce, inclinando la penna ombreggia in largo.
+  - Tocca il pulsante delle penne (in alto a sinistra negli strumenti) per scegliere: ogni voce mostra
+    l'anteprima del suo tratto.
+  - Nel pannello: "Sensibilita' alla pressione" (se il tratto e' troppo sottile col tocco leggero,
+    spostala verso "morbida") e "Stabilizzatore del tratto" (rende le linee piu' pulite, utile
+    per l'inchiostrazione).
+  - Scelte di penna, colore, spessore e sensibilita' restano memorizzate.
+  - Spostamento e zoom piu' fluidi.
+  - I quaderni della 0.1 si aprono come prima.
 
 COSA CONTIENE QUESTA CARTELLA
   index.html                   l'app (e' tutta qui dentro)
   manifest.webmanifest         permette di installarla come app
-  sw.js                        la fa funzionare anche senza internet
+  sw.js                        la fa funzionare anche senza internet e la tiene aggiornata
   icon-192.png, icon-512.png   icone
 
-COME METTERLA SUL TABLET (una volta sola)
-L'app deve stare su un indirizzo internet, anche gratuito. Il modo piu' semplice:
-  1. Dal computer apri https://app.netlify.com/drop
-  2. Trascina l'INTERA cartella "taccuino-v0.1" nella pagina.
-  3. Ti viene dato un indirizzo (tipo https://nome-casuale.netlify.app). Aprilo dal tablet con Chrome.
-  4. Menu di Chrome (tre puntini) > "Installa app" (o "Aggiungi a schermata Home").
-Da quel momento Taccuino e' un'icona sul tablet e funziona anche offline.
-Lo stesso indirizzo si manda ai colleghi: ognuno lo installa sul proprio tablet.
+COME AGGIORNARE L'APP GIA' PUBBLICATA SU GITHUB
+  1. Apri https://github.com/Toskurim/taccuino e clicca "Add file" > "Upload files".
+  2. Trascina i 5 file di questa cartella (index.html, manifest.webmanifest, sw.js, icon-192.png,
+     icon-512.png): sostituiscono quelli vecchi. Il LEGGIMI.txt e' facoltativo.
+  3. Scrivi "Taccuino v0.2.0" come messaggio e clicca "Commit changes".
+  4. Dopo uno o due minuti il tablet si aggiorna da solo: apri l'app con internet attivo e, se vedi
+     ancora la versione vecchia, chiudila e riaprila. In fondo alla pagina iniziale c'e' scritto
+     "Versione 0.2.0".
+
+COME METTERLA SUL TABLET (se non e' ancora installata)
+  Apri https://toskurim.github.io/taccuino/ con Chrome > menu (tre puntini) > "Installa app".
 
 COME SI USA
   - Penna: scrive. Il dito sposta e zooma la pagina (con due dita). Il palmo viene ignorato.
   - Per scrivere anche col dito: Altro > "Disegna anche col dito".
-  - Strumenti: penna, evidenziatore, gomma a tratto (cancella un tratto intero), colori, spessore.
+  - Strumenti: penne e matite, evidenziatore, gomma a tratto (cancella un tratto intero), colori, spessore.
   - Annulla / Ripeti, zoom, pagine multiple, sfondi (bianco, righe, quadretti, puntini, millimetrata).
   - "Importa" nella home: PDF (serve internet), foto o disegni da annotare.
   - Altro > Esporta: pagina in PNG, quaderno in PDF, oppure file .taccuino da mandare ai colleghi
@@ -31,8 +50,9 @@ DOVE SONO I QUADERNI
 Restano salvati nel tablet, dentro il browser. Se cancelli i dati di Chrome o disinstalli l'app
 li perdi: ogni tanto esporta i quaderni importanti (PDF o .taccuino).
 
-LIMITI DELLA 0.1.0
+LIMITI DELLA 0.2.0
   - Niente sincronizzazione automatica tra tablet (si passano i file .taccuino).
   - Niente riconoscimento della scrittura a mano (da scrittura a testo).
   - L'importazione dei PDF scarica una libreria da internet: offline non funziona.
-  - Provata in un browser da computer; da verificare con la tua penna sul tablet.
+  - Provata in un browser da computer con una penna simulata; la resa vera dipende dalla tua penna:
+    se il tratto non ti convince, regola la sensibilita' e dimmi come si comporta.
