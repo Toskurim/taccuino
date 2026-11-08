@@ -1,23 +1,28 @@
-TACCUINO - versione 0.3.0
+TACCUINO - versione 0.4.0
 Quaderni a penna per tablet Android. Gratis, senza account, in italiano.
 
-NOVITA' DELLA 0.3.0
-  - Grafica rinnovata: font Barlow (incorporato, funziona anche offline), schede dei quaderni
-    con angoli da "disegno tecnico", pulsanti e menu piu' curati.
-  - Colore del tema: Inchiostro, Officina, Bosco, Bordeaux, Viola, Petrolio, oppure "Scegli tu"
-    (qualsiasi colore). Si cambia da "Aspetto" nella pagina iniziale.
-  - Chiaro / scuro / automatico (segue il tablet).
-  - Colore della carta, 5 tipi: Bianca, Avorio, Sabbia, Grigio tecnico, Lavagna (scura).
-    * "Aspetto" sceglie la carta dei NUOVI quaderni (si puo' cambiare anche nella finestra "Nuovo quaderno").
-    * Nell'editor: Altro > "Colore della carta" cambia la pagina; "Usa questa carta su tutto il quaderno" la estende.
-  - Righe, quadretti e puntini si adattano al colore della carta; l'evidenziatore funziona anche sulla lavagna.
-  - I quaderni delle versioni precedenti si aprono come prima (carta bianca).
-
-COSA CONTIENE QUESTA CARTELLA
-  index.html, manifest.webmanifest, sw.js, icon-192.png, icon-512.png
+NOVITA' DELLA 0.4.0
+  - CORSO DI DISEGNO RIFATTO: 24 lezioni in 6 moduli (prima erano 10, troppo semplici).
+      1 Mano e occhio: gesto e riscaldamento, curve e ellissi, misurare a occhio
+      2 Forme e volume: sfera e luce, cubo, cilindro e cono, oggetti con le forme base
+      3 Prospettiva: orizzonte, un punto di fuga, due punti di fuga
+      4 Il volto manga: volto di fronte, di tre quarti, di profilo, occhi, naso/bocca/orecchie, capelli, espressioni
+      5 Corpo e mani: manichino, mani, pose e linea d'azione, personaggi chibi
+      6 Inchiostro e tavole: ombre e retini, impaginare una tavola, foglio del personaggio
+    Ogni lezione ha: obiettivo, spiegazione, passi con il disegno costruito pezzo per pezzo (il tratto
+    nuovo e' in arancione), risultato finale, errori comuni, esercizi di ripasso, controlli da spuntare e consiglio.
+  - "Esercizio guidato": apre un quaderno con una pagina di riscaldamento, una pagina per OGNI passo
+    (guida puntinata da ricalcare in alto, spazio libero sotto per rifare da solo) e una pagina finale.
+  - Progressi salvati: lezioni completate e controlli spuntati. Il corso ti propone la prossima lezione.
+  - DISEGNO VELOCE: eliminato il ritardo quando si disegnano tante linee di seguito. Prima a ogni tratto
+    l'app ridisegnava da zero tutta la pagina; ora aggiunge solo il tratto nuovo. Anche il salvataggio
+    e l'anteprima del quaderno pesano molto meno.
 
 COME AGGIORNARE L'APP GIA' PUBBLICATA SU GITHUB
   1. Apri https://github.com/Toskurim/taccuino > "Add file" > "Upload files".
   2. Trascina index.html e sw.js (gli altri file non sono cambiati).
-  3. Messaggio "Taccuino v0.3.0" e "Commit changes".
-  4. Dopo un minuto apri l'app con internet attivo; in fondo alla home c'e' scritto "Versione 0.3.0".
+  3. Messaggio "Taccuino v0.4.0" e "Commit changes".
+  4. Dopo un minuto apri l'app con internet attivo; in fondo alla home c'e' scritto "Versione 0.4.0".
+
+NOTA: i progressi del vecchio corso a 10 lezioni non vengono riportati (le lezioni sono cambiate).
+I quaderni e i disegni gia' fatti restano com'erano.

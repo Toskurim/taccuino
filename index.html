@@ -150,6 +150,39 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;-webki
 .brow .bn{font-family:var(--fd);font-weight:600;font-size:16px;letter-spacing:.02em}
 .brow canvas{position:static;inset:auto;width:100%;height:auto;aspect-ratio:320/72;background:#fff;border-radius:6px;display:block;touch-action:auto}
 @media (prefers-reduced-motion:no-preference){.card{transition:transform .14s,box-shadow .14s}.card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.16)}.card:active{transform:scale(.985)}}
+/* v0.4: corso di disegno */
+.course{display:block;padding:18px 24px 40px;max-width:1100px;margin:0 auto}
+.cstat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.cs1{display:flex;flex-direction:column;gap:2px;min-width:0}.cs1 b{font-family:var(--fd);font-size:20px}.cs1 span{color:var(--muted)}
+.cstat .pbar{grid-column:1/-1;order:3;height:8px;background:var(--grid);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.mod{margin-top:30px}.mh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mh h3{font-family:var(--fd);font-size:26px;margin:0;flex:1;min-width:0}
+.mn{font-size:12px;letter-spacing:.16em;color:var(--accent);font-weight:600}.mc{color:var(--muted);font-variant-numeric:tabular-nums}
+.md{color:var(--muted);margin:4px 0 14px;max-width:70ch}
+.course .lessons{padding:0}
+.lw{display:block;max-width:980px;margin:0 auto;padding:20px 24px 60px}
+.lw .lead{max-width:68ch;font-size:17px;margin:14px 0}
+.lw .row{display:flex;gap:10px;flex-wrap:wrap}
+.goal{border:1px solid var(--accent);border-radius:8px;padding:12px 16px;background:var(--panel);max-width:68ch}
+.goal b{font-family:var(--fd);letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:var(--accent)}
+.lw h3{font-family:var(--fd);font-size:22px;margin:0}
+.lw h3.sec{margin:26px 0 12px}
+.steps{display:grid;gap:14px}
+.stp{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,340px);gap:16px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+@media (max-width:760px){.stp{grid-template-columns:44px minmax(0,1fr)}.stp .guide{grid-column:1/-1}}
+.sn{width:44px;height:44px;border-radius:6px;background:var(--bar);color:var(--bar-ink);display:grid;place-items:center;font-family:var(--fd);font-weight:700;font-size:20px}
+.st b{font-family:var(--fd);letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--accent)}
+.st p{margin:4px 0 0;max-width:56ch}
+.fin{margin-top:22px;max-width:520px}.fin h3{margin-bottom:8px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:22px}
+.blk{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px}
+.blk ul{margin:8px 0 0;padding-left:20px}.blk li{margin:0 0 8px}
+.blk.err{border-left:4px solid var(--danger)}.blk.dr{border-left:4px solid var(--accent)}.blk.chk{margin-top:14px;border-left:4px solid var(--ok)}
+.ck{display:flex;gap:12px;align-items:flex-start;padding:8px 0;min-height:44px;cursor:pointer}
+.ck input{width:24px;height:24px;margin:0;accent-color:var(--accent);flex:none}
+.lw .tip{margin-top:14px}
+.act2{margin-top:22px}.nav2{margin-top:14px;justify-content:space-between}
 </style>
 </head>
 <body>
@@ -180,7 +213,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;-webki
 
 <div id="course" class="screen" hidden>
   <div class="head2"><button class="ibd" id="cBack" aria-label="Indietro" data-ic="back"></button><h2>Corso di disegno</h2></div>
-  <p class="intro">Dieci lezioni brevi, dalle linee base al manga. Ogni lezione ha una pagina guida con punti e tracce da ripassare con la penna, pronta da aprire nell&rsquo;editor.</p>
+  <p class="intro">Ventiquattro lezioni in sei moduli, dalle linee base al manga. Ogni lezione spiega l&rsquo;obiettivo, ti guida passo per passo con un disegno costruito pezzo per pezzo, elenca gli errori comuni e gli esercizi di ripasso, e apre una pagina per ogni passo da ricalcare e poi rifare da solo.</p>
   <div id="lessons" class="lessons"></div>
 </div>
 
@@ -226,7 +259,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;-webki
 
 <script>
 'use strict';
-const VERSION='0.3.0';
+const VERSION='0.4.0';
 const PW=1240, PH=1754;
 const $=s=>document.querySelector(s);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -662,6 +695,10 @@ function clampPan(){const pg=page(),k=90;ox=clamp(ox,k-pg.w*z,SW-k);oy=clamp(oy,
 /* durante spostamento e zoom si trasla l'immagine già pronta; il ridisegno nitido arriva a gesto finito */
 function viewMoved(){req();clearTimeout(vt);vt=setTimeout(()=>{layerDirty=true;req();},160);}
 function zoomAt(x,y,f){const nz=clamp(z*f,.15,8);ox=x-(x-ox)*(nz/z);oy=y-(y-oy)*(nz/z);z=nz;clampPan();viewMoved();}
+function commitCache(s){
+  if(layerDirty||z!==cz||ox!==cox||oy!==coy){layerDirty=true;return;}
+  const c=cx2,pg=page();c.save();c.setTransform(dpr*z,0,0,dpr*z,dpr*ox,dpr*oy);c.beginPath();c.rect(0,0,pg.w,pg.h);c.clip();drawStroke(c,s);c.restore();
+}
 function renderLayer(){
   const c=cx2,pg=page();c.setTransform(1,0,0,1,0,0);c.fillStyle=stageColor;c.fillRect(0,0,cache.width,cache.height);
   c.setTransform(dpr*z,0,0,dpr*z,dpr*ox,dpr*oy);
@@ -689,7 +726,8 @@ function frame(){
 /* puntatori: penna e mouse disegnano; le dita spostano e zoomano (o disegnano se attivato) */
 let drawing=null,lastPen=0,penDown=false,hinted=false;
 const ptrs=new Map();let g=null;
-const posOf=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+let cvRect=null;new ResizeObserver(()=>{cvRect=null;}).observe(cv);addEventListener('scroll',()=>{cvRect=null;},true);addEventListener('resize',()=>{cvRect=null;});
+const posOf=e=>{const r=cvRect||(cvRect=cv.getBoundingClientRect());return {x:e.clientX-r.left,y:e.clientY-r.top};};
 const toPage=e=>{const p=posOf(e);return [(p.x-ox)/z,(p.y-oy)/z];};
 function startStroke(e){
   const m=(e.pointerType==='pen'&&((e.buttons&32)||e.button===5))?'er':tool;
@@ -736,8 +774,9 @@ function endStroke(){
     if(STAB>0&&d.raw){const n=p.length;if(Math.hypot(d.raw[0]-p[n-4],d.raw[1]-p[n-3])>.5)p.push(Math.round(d.raw[0]*10)/10,Math.round(d.raw[1]*10)/10,Math.round(d.raw[2]*200)/200,Math.round(d.raw[3]*100)/100);}
     let a=1e9,b=1e9,c=-1e9,e=-1e9;
     for(let i=0;i<p.length;i+=4){a=Math.min(a,p[i]);c=Math.max(c,p[i]);b=Math.min(b,p[i+1]);e=Math.max(e,p[i+1]);}
-    d.s.b=[a,b,c,e];page().strokes.push(d.s);pushAct({k:'add',s:d.s});}
-  layerDirty=true;req();save();
+    d.s.b=[a,b,c,e];page().strokes.push(d.s);pushAct({k:'add',s:d.s});commitCache(d.s);}
+  if(d.mode==='er'||!d.s||!d.s.p.length)layerDirty=true;
+  req();save();
 }
 function pushAct(a){const h=H();h.u.push(a);if(h.u.length>300)h.u.shift();h.r.length=0;updUndo();}
 function undo(){
@@ -935,14 +974,14 @@ $('#eMore').onclick=e=>{
 
 /* salvataggio */
 let saveT=0,dirty=false;
-function save(){dirty=true;clearTimeout(saveT);saveT=setTimeout(flush,700);}
-async function flush(){
+function save(){dirty=true;clearTimeout(saveT);saveT=setTimeout(()=>flush(),1800);}
+async function flush(force){
   if(!nb||!dirty)return;dirty=false;nb.updated=Date.now();
-  if(cur===0||!nb.thumb)nb.thumb=makeThumb(nb.pages[0]);
+  if(!nb.thumb||force===true||(cur===0&&Date.now()-(nb.thumbT||0)>25000)){nb.thumb=makeThumb(nb.pages[0]);nb.thumbT=Date.now();}
   try{await store.put(nb);}catch(e){toast('Salvataggio non riuscito: spazio esaurito o archivio non disponibile.');}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden)flush();});
-addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush(true);});
+addEventListener('pagehide',()=>flush(true));
 
 /* ---------- esportazione ---------- */
 const safeName=s=>(s||'quaderno').replace(/[^\p{L}\p{N}\-_ ]+/gu,'').trim().replace(/\s+/g,'-').slice(0,60)||'quaderno';
@@ -1097,135 +1136,664 @@ async function openNb(n){
   $('#eTitle').value=n.title;setTool(tool);
   if(location.hash!=='#quaderno')location.hash='quaderno';else route();
 }
-function closeEditor(){if(nb){clearTimeout(saveT);dirty=true;flush();}nb=null;drawing=null;ptrs.clear();}
+function closeEditor(){if(nb){clearTimeout(saveT);dirty=true;flush(true);}nb=null;drawing=null;ptrs.clear();}
 
-/* ---------- corso di disegno ---------- */
-const GC='#6a8fdc';
-const dots=a=>`<g fill="none" stroke="${GC}" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 13">${a}</g>`;
-const faint=(a,o=.4)=>`<g fill="none" stroke="${GC}" stroke-width="2.5" stroke-linecap="round" opacity="${o}">${a}</g>`;
-const ln=(a,b,c,d)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`;
-const ci=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`;
-const el=(x,y,a,b)=>`<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}"/>`;
-const tx=(x,y,t,s=30,an='start')=>`<text x="${x}" y="${y}" font-family="sans-serif" font-size="${s}" fill="#7d8da3" text-anchor="${an}">${t}</text>`;
-const wrap=(t,sub,body)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1754" width="1240" height="1754"><text x="70" y="105" font-family="sans-serif" font-size="44" font-weight="700" fill="#4a5a70">${t}</text><text x="70" y="150" font-family="sans-serif" font-size="27" fill="#7d8da3">${sub}</text>${body}</svg>`;
-const arrow=(x1,y1,x2,y2)=>{const a=Math.atan2(y2-y1,x2-x1),l=22;return ln(x1,y1,x2,y2)+ln(x2,y2,x2-l*Math.cos(a-.5),y2-l*Math.sin(a-.5))+ln(x2,y2,x2-l*Math.cos(a+.5),y2-l*Math.sin(a+.5));};
-function faceGuide(cx,cy,r){
-  const eye=cy+.15*r,chin=cy+1.65*r;
-  const d=ci(cx,cy,r)+`<path d="M${cx-.82*r} ${cy+.57*r} Q${cx-.5*r} ${cy+1.5*r} ${cx} ${chin} Q${cx+.5*r} ${cy+1.5*r} ${cx+.82*r} ${cy+.57*r}"/>`+el(cx-r*.99,cy+.45*r,.11*r,.28*r)+el(cx+r*.99,cy+.45*r,.11*r,.28*r);
-  const f=ln(cx,cy-r-18,cx,chin+10)+ln(cx-.95*r,eye,cx+.95*r,eye)+ln(cx-.3*r,cy+.75*r,cx+.3*r,cy+.75*r)+ln(cx-.4*r,cy+1.05*r,cx+.4*r,cy+1.05*r);
-  return dots(d)+faint(f,.45);
+/* ---------- corso di disegno (v0.4) ---------- */
+const ACC='#e8590c',INK='#1f2937',OLDC='#3b4656',CBL='#4f86f0',TRC='#6a8fdc';
+let _cid=0;
+const f1=n=>Math.round(n*10)/10;
+const ln=(a,b,c,d)=>`<line x1="${f1(a)}" y1="${f1(b)}" x2="${f1(c)}" y2="${f1(d)}"/>`;
+const ci=(x,y,r,x2='')=>`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" ${x2}/>`;
+const el=(x,y,a,b,rot=0)=>`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(a)}" ry="${f1(b)}"${rot?` transform="rotate(${rot} ${f1(x)} ${f1(y)})"`:''}/>`;
+const pa=(d,x2='')=>`<path d="${d}" ${x2}/>`;
+const rc=(x,y,w,h,r=0,x2='')=>`<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="${r}" ${x2}/>`;
+const poly=(pts,x2='')=>`<polygon points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}" ${x2}/>`;
+const tx=(x,y,t,s=26,an='start',col='#5b6b82')=>`<text x="${x}" y="${y}" font-family="sans-serif" font-size="${s}" fill="${col}" stroke="none" text-anchor="${an}">${t}</text>`;
+const arrow=(x1,y1,x2,y2)=>{const a=Math.atan2(y2-y1,x2-x1),l=24;return ln(x1,y1,x2,y2)+ln(x2,y2,x2-l*Math.cos(a-.45),y2-l*Math.sin(a-.45))+ln(x2,y2,x2-l*Math.cos(a+.45),y2-l*Math.sin(a+.45));};
+const GRY='fill="#8d98a8" fill-opacity=".55" stroke="none"';
+const wrapT=(s,n)=>{const w=s.split(' '),o=[];let l='';for(const x of w){if((l+' '+x).trim().length>n){o.push(l);l=x;}else l=(l+' '+x).trim();}if(l)o.push(l);return o;};
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* disegno di un passo: tratti nuovi in arancio, passi precedenti in grigio scuro, linee di costruzione tratteggiate */
+function diagram(L,k,mode){
+  let o='';
+  for(let j=0;j<L.st.length;j++){
+    if(mode!=='final'&&mode!=='trace_final'&&j>k)break;
+    const [,n,c]=L.st[j],cur=mode==='step'&&j===k;
+    if(c){
+      const st=mode[0]==='t'?`stroke="${TRC}" stroke-width="2.5" stroke-dasharray="1 12" opacity=".8"`:(cur?`stroke="${CBL}" stroke-width="3.5" stroke-dasharray="11 8"`:`stroke="#9db9ee" stroke-width="2.6" stroke-dasharray="11 8"`);
+      o+=`<g fill="none" stroke-linecap="round" stroke-linejoin="round" ${st}>${c}</g>`;
+    }
+    if(n){
+      const st=mode[0]==='t'?`stroke="${TRC}" stroke-width="4.2" stroke-dasharray="1 12"`:mode==='final'?`stroke="${INK}" stroke-width="5"`:(cur?`stroke="${ACC}" stroke-width="6.5"`:`stroke="${OLDC}" stroke-width="4.5"`);
+      o+=`<g fill="none" stroke-linecap="round" stroke-linejoin="round" ${st}>${n}</g>`;
+    }
+  }
+  const bg=mode[0]==='t'?'':'<rect width="1000" height="700" fill="#fff"/>';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="1000" height="700">${bg}${o}</svg>`;
 }
-function eyeGuide(cx,cy,dx,dy){
-  const d=`<path d="M${cx-100} ${cy+10} Q${cx} ${cy-85} ${cx+100} ${cy+10}"/><path d="M${cx-100} ${cy+10} Q${cx} ${cy+45} ${cx+100} ${cy+10}"/>`+ci(cx+dx,cy-8+dy,42);
-  return dots(d)+faint(`<path d="M${cx-100} ${cy-90} Q${cx} ${cy-140} ${cx+100} ${cy-80}"/>`,.35);
-}
-function star(cx,cy,R,r){let p='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,k=i%2?r:R;p+=(i?'L':'M')+(cx+k*Math.cos(a)).toFixed(1)+' '+(cy+k*Math.sin(a)).toFixed(1);}return `<path d="${p}Z"/>`;}
-const LESSONS=[
-{t:'Linee e controllo della mano',lv:'Base',min:15,
- intro:'Prima di disegnare un personaggio serve una mano che obbedisce. Questo esercizio costruisce fiducia nel tratto.',
- steps:['Appoggia il polso e muovi tutto l’avambraccio: il tratto lungo nasce dalla spalla e dal gomito, non dal polso.','Nella prima zona collega ogni coppia di punti con una sola linea veloce. Meglio una linea decisa e un po’ storta che una tremolante.','Nella seconda zona ripassa le onde senza fermarti, tenendo lo stesso ritmo.','Nella terza chiudi ogni cerchio in un solo gesto. Fai un paio di giri sopra il foglio senza toccarlo, poi scendi con la penna.'],
- tip:'Cinque minuti ogni giorno valgono più di un’ora una volta al mese. Con «Annulla» puoi sbagliare quanto vuoi.',
- guide:()=>{let s='',d='';for(let i=0;i<9;i++){const y=250+i*62;s+=ci(90,y,9)+ci(1150,y+(i%3-1)*60,9);}
-  for(let i=0;i<4;i++){const y=930+i*95;d+=`<path d="M90 ${y} C290 ${y-70} 440 ${y+70} 620 ${y} S960 ${y-70} 1150 ${y}"/>`;}
-  for(let i=0;i<6;i++){d+=ci(160+i*184,1500,62)+ci(160+i*184,1650,62);}
-  return wrap('Lezione 1 · Linee e controllo','Collega i punti, ripassa le onde, chiudi i cerchi in un solo gesto',faint(s,.9)+dots(d)+tx(90,215,'1 · Linee dritte')+tx(90,880,'2 · Onde')+tx(90,1400,'3 · Cerchi'));}},
-{t:'Forme base e volume',lv:'Base',min:20,
- intro:'Ogni oggetto, anche un volto, si scompone in sfere, cubi, cilindri e coni. Imparare a farli «girare» nello spazio è la base del disegno.',
- steps:['Ripassa il cerchio e trasformalo in una sfera aggiungendo una linea curva che segue la sua rotondità.','Nel cubo collega i quattro angoli del quadrato davanti con quelli del quadrato dietro.','Nel cilindro unisci le due ellissi con due linee verticali. L’ellisse in basso si vede solo per metà.','Nel cono unisci i due lati della base alla punta.','Nella fila in basso scegli da dove arriva la luce (la freccia) e ombreggia il lato opposto, poi aggiungi l’ombra a terra.'],
- tip:'Disegna anche le linee nascoste con un tratto leggero: ti aiutano a capire la costruzione.',
- guide:()=>{let d=ci(330,500,150)+`<rect x="740" y="400" width="220" height="220"/><rect x="820" y="330" width="220" height="220"/>`+el(330,880,130,40)+el(330,1180,130,40)+el(860,1180,130,40)+ci(860,860,8)+ci(330,1530,120)+el(480,1665,140,30)+ci(900,1530,120)+el(1050,1665,140,30);
-  return wrap('Lezione 2 · Forme base e volume','Sfera, cubo, cilindro, cono: dal contorno al volume',dots(d)+faint(arrow(150,1370,240,1440),.8)+faint(arrow(720,1370,810,1440),.8)+tx(330,330,'Sfera',30,'middle')+tx(890,285,'Cubo',30,'middle')+tx(330,790,'Cilindro',30,'middle')+tx(860,790,'Cono',30,'middle')+tx(620,1340,'Luce e ombra',30,'middle'));}},
-{t:'Prospettiva a un punto',lv:'Intermedio',min:25,
- intro:'Corridoi, strade e stanze viste di fronte. Tutte le linee che vanno in profondità convergono in un solo punto di fuga, sull’orizzonte.',
- steps:['Il punto di fuga è già segnato sulla linea dell’orizzonte: ogni linea in profondità deve puntare lì.','Collega gli angoli di ciascun quadrato frontale al punto di fuga con righe leggere.','Scegli la profondità del cubo con una linea orizzontale e una verticale tra i raggi: così ottieni la faccia posteriore, più piccola.','Ripassa con tratto deciso solo le linee che formano il solido.','Avanzato: disegna una stanza con pareti e pavimento a quadrotti, usando gli stessi raggi.'],
- tip:'Se l’orizzonte è sopra il cubo lo vedi dal basso, se è sotto lo vedi dall’alto. Un cubo che attraversa l’orizzonte è all’altezza dei tuoi occhi.',
- guide:()=>{let r='';for(let x=70;x<=1170;x+=110)r+=ln(620,760,x,190)+ln(620,760,x,1700);for(let y=190;y<=1700;y+=150)r+=ln(620,760,70,y)+ln(620,760,1170,y);
-  const d=`<rect x="150" y="360" width="220" height="220"/><rect x="850" y="650" width="220" height="220"/><rect x="200" y="1000" width="220" height="220"/><rect x="800" y="1100" width="260" height="260"/>`;
-  return wrap('Lezione 3 · Prospettiva a un punto','Punto di fuga al centro dell’orizzonte',faint(r,.16)+faint(ln(70,760,1170,760),.7)+faint(ci(620,760,13),.9)+dots(d)+tx(640,735,'Punto di fuga',26)+tx(80,745,'Orizzonte',26));}},
-{t:'Prospettiva a due punti',lv:'Intermedio',min:25,
- intro:'Per edifici e oggetti visti «d’angolo». Qui i punti di fuga sono due, entrambi sull’orizzonte.',
- steps:['La linea verticale tratteggiata è lo spigolo più vicino a te.','Dalla cima e dal fondo dello spigolo traccia raggi leggeri verso i due punti di fuga, a sinistra e a destra.','Chiudi le due pareti con una verticale per lato: le verticali restano sempre verticali.','Aggiungi tetto, porte e finestre seguendo gli stessi raggi.','Ripeti con il secondo edificio più in basso, dove l’orizzonte lo fa vedere dall’alto.'],
- tip:'Tieni i punti di fuga molto distanti tra loro: se sono vicini l’oggetto sembra deformato.',
- guide:()=>{let r='';for(const[x,y1,y2]of[[620,420,1000],[900,1100,1560]])for(const vx of[110,1130])r+=ln(vx,700,x,y1)+ln(vx,700,x,y2);
-  const d=ln(620,420,620,1000)+ln(900,1100,900,1560);
-  return wrap('Lezione 4 · Prospettiva a due punti','Due punti di fuga sull’orizzonte',faint(r,.3)+faint(ln(60,700,1180,700),.7)+faint(ci(110,700,13)+ci(1130,700,13),.9)+dots(d)+tx(110,670,'PdF sinistro',24)+tx(1130,670,'PdF destro',24,'end')+tx(80,690,'',1));}},
-{t:'Il volto manga di fronte',lv:'Base',min:30,
- intro:'Uno schema semplice per costruire un volto in proporzione. Poi si personalizza: negli stili manga occhi e mento cambiano molto.',
- steps:['Il cerchio è il cranio. La linea verticale è l’asse del volto.','La linea orizzontale è la linea degli occhi, appena sotto il centro nei volti giovani.','Le linee dei lati scendono a V arrotondata fino al mento, poco più di un raggio e mezzo sotto il centro.','Il naso sta a circa due quinti del tratto tra occhi e mento, la bocca poco oltre la metà.','Le orecchie stanno tra la linea degli occhi e quella del naso.','I capelli partono dalla sommità del cranio, non dal bordo del viso: dai volume sopra al cerchio.'],
- tip:'Usa il volto grande per costruire con calma e i due piccoli per esercitarti a mano libera, sempre con la stessa sequenza.',
- guide:()=>wrap('Lezione 5 · Il volto di fronte','Cerchio, asse, linea degli occhi, mento',faceGuide(620,520,250)+faceGuide(340,1350,165)+faceGuide(900,1350,165)+tx(620,205,'Volto di fronte',28,'middle')+tx(620,1160,'Esercitati qui',28,'middle'))},
-{t:'Occhi e sguardo',lv:'Intermedio',min:30,
- intro:'Lo sguardo fa vivere un personaggio. Le guide mostrano gli occhi con l’iride in posizioni diverse.',
- steps:['La palpebra superiore è la linea più spessa e scura: definisce lo sguardo.','L’iride è un cerchio tagliato in alto dalla palpebra, quindi non si vede mai intero.','Pupilla scura al centro e riflesso lasciato bianco. Un riflesso grande e uno piccolo opposto danno profondità.','La palpebra inferiore è un tratto sottile e leggero.','Poche ciglia ricurve verso l’esterno bastano.','Nelle righe 2, 3 e 4 sposta l’iride per guardare a sinistra, a destra e in alto.'],
- tip:'I due occhi guardano lo stesso punto: controlla che le iridi siano allineate.',
- guide:()=>{let b='';const rows=[[330,0,0,'Sguardo avanti'],[620,-24,0,'A sinistra'],[910,24,0,'A destra'],[1190,0,-26,'In alto']];
-  for(const[y,dx,dy,l]of rows){b+=eyeGuide(330,y,dx,dy)+eyeGuide(910,y,dx,dy)+tx(620,y-70,l,24,'middle');}
-  b+=`<g transform="translate(620 1590) scale(1.8) translate(-620 -1590)">${eyeGuide(620,1590,0,0)}</g>`+tx(620,1430,'Occhio grande da rifinire',24,'middle');
-  return wrap('Lezione 6 · Occhi e sguardo','Palpebra, iride, pupilla, riflesso',b);}},
-{t:'Espressioni',lv:'Intermedio',min:30,
- intro:'Le emozioni passano da sopracciglia, occhi e bocca. Il resto del volto resta uguale.',
- steps:['Gioia: sopracciglia alte e arcuate, occhi socchiusi a mezzaluna, bocca aperta con gli angoli in su.','Rabbia: sopracciglia abbassate verso il centro, occhi stretti, bocca a linea tesa o con i denti.','Sorpresa: sopracciglia molto alte, occhi grandi con iridi piccole, bocca a «o».','Tristezza: parte interna delle sopracciglia alzata, occhi lucidi, angoli della bocca in giù.','Imbarazzo: sopracciglia storte, tratti diagonali sulle guance, bocca ondulata.','Determinazione: sopracciglia dritte e basse, sguardo fisso, mascella serrata.'],
- tip:'All’inizio spingi l’espressione oltre il realistico: nel manga l’esagerazione è una scelta di stile.',
- guide:()=>{let b='';const L=['Gioia','Rabbia','Sorpresa','Tristezza','Imbarazzo','Determinazione'];[[330,420],[910,420],[330,860],[910,860],[330,1300],[910,1300]].forEach(([x,y],i)=>{b+=faceGuide(x,y,150)+tx(x,y-175,L[i],28,'middle');});
-  return wrap('Lezione 7 · Espressioni','Stesso volto, sei emozioni',b);}},
-{t:'Corpo a manichino',lv:'Intermedio',min:40,
- intro:'Prima la posa, poi il personaggio. Il manichino è fatto di ovali e cerchi sulle articolazioni.',
- steps:['La linea verticale è divisa in otto teste, la misura di molti personaggi adulti e slanciati. Per personaggi più giovani usa cinque o sei teste.','Ripassa l’ovale della testa, quello del torace e il cerchio del bacino.','Le spalle misurano circa una testa e mezza. Il bacino sta a tre teste e mezza dall’alto.','Gomiti all’altezza della vita, polsi all’altezza dell’inguine, ginocchia a circa sei teste.','Per dare movimento inclina la linea delle spalle in direzione opposta a quella dei fianchi.'],
- tip:'Fai molti manichini veloci, anche di trenta secondi ciascuno: ti insegnano la posa più di un solo disegno rifinito.',
- guide:()=>{const H0=187.5,Y=k=>150+H0*k;let t='';for(let i=0;i<=8;i++)t+=ln(380,Y(i),860,Y(i));
-  let d=el(620,Y(.5),72,92)+ln(620,Y(1),620,Y(1.3))+ln(490,Y(1.35),750,Y(1.35))+el(620,Y(2.2),105,150)+ci(620,Y(3.4),65)
-   +ln(490,Y(1.35),445,Y(2.9))+ln(445,Y(2.9),430,Y(4))+ln(750,Y(1.35),795,Y(2.9))+ln(795,Y(2.9),810,Y(4))
-   +ln(585,Y(3.6),575,Y(6))+ln(575,Y(6),570,Y(7.6))+ln(655,Y(3.6),665,Y(6))+ln(665,Y(6),670,Y(7.6))
-   +el(545,Y(7.85),55,20)+el(695,Y(7.85),55,20);
-  for(const[x,y]of[[490,Y(1.35)],[750,Y(1.35)],[445,Y(2.9)],[795,Y(2.9)],[430,Y(4)],[810,Y(4)],[575,Y(6)],[665,Y(6)]])d+=ci(x,y,15);
-  let n='';for(let i=0;i<8;i++)n+=tx(340,Y(i+.5)+10,String(i+1),30,'end');
-  return wrap('Lezione 8 · Corpo a manichino','Otto teste di altezza, ovali e articolazioni',faint(ln(620,150,620,1650),.35)+faint(t,.28)+dots(d)+n);}},
-{t:'Inchiostrazione',lv:'Intermedio',min:30,
- intro:'Ripassare una bozza a «matita» con tratto pulito. Sul tablet le guide puntinate fanno da matita.',
- steps:['Ripassa le forme guida con la penna, una alla volta.','Contorno esterno più spesso, linee interne e dettagli più sottili. Aumenta lo spessore dal cursore o premendo di più.','Traccia le linee in un gesto continuo e stacca la penna solo agli angoli.','Fai finire le linee con una punta affusolata: alleggerisci la pressione verso la fine.','Non riempire tutto di nero: lascia respirare le zone chiare.'],
- tip:'Con «Annulla» e la gomma a tratto puoi provare più versioni dello stesso contorno e tenere la migliore.',
- guide:()=>{const d=`<path d="M130 440 Q330 230 540 440 Q330 620 130 440Z"/><path d="M130 440 Q330 440 540 440"/>`
-  +`<path d="M720 400 L720 590 Q720 650 790 650 L930 650 Q1000 650 1000 590 L1000 400"/>`+el(860,400,140,32)+`<path d="M1000 440 Q1100 440 1100 510 Q1100 580 1000 580"/>`
-  +star(340,900,170,70)
-  +`<path d="M850 990 C670 880 700 760 780 780 C820 790 840 820 850 840 C860 820 880 790 920 780 C1000 760 1030 880 850 990Z"/>`
-  +`<path d="M190 1390 a70 70 0 0 1 20 -140 a90 90 0 0 1 170 -30 a80 80 0 0 1 140 50 a60 60 0 0 1 10 120 Z"/>`
-  +el(850,1330,170,90)+`<path d="M1020 1330 L1130 1250 L1130 1410 Z"/>`+ci(770,1305,12);
-  return wrap('Lezione 9 · Inchiostrazione','Ripassa le tracce con spessori diversi',dots(d));}},
-{t:'Ombre e retini',lv:'Intermedio',min:30,
- intro:'Dare volume con soli tratti, come nei fumetti in bianco e nero. Quattro modi di ombreggiare la stessa sfera.',
- steps:['Scegli la direzione della luce (la freccia): il lato opposto sarà il più scuro.','Tratteggio: linee parallele, più fitte dove l’ombra è più scura.','Tratteggio incrociato: un secondo strato di linee ad angolo sopra il primo.','Retino a punti: puntini su una griglia, più grandi e fitti nelle zone scure. Usa la penna sottile e tocchi rapidi.','Sfumato a linee: linee che si diradano verso la luce.','In tutte aggiungi l’ombra a terra: un’ellisse scura dal lato opposto alla luce.'],
- tip:'Confronta i quattro risultati: quale rende meglio il volume? Il retino a punti è lento ma molto elegante.',
- guide:()=>{let b='';[['Tratteggio',90,260],['Tratteggio incrociato',650,260],['Retino a punti',90,960],['Sfumato a linee',650,960]].forEach(([l,x,y])=>{const cx=x+250,cy=y+270;
-   b+=faint(`<rect x="${x}" y="${y}" width="500" height="580" rx="14"/>`,.3)+dots(ci(cx,cy,170)+el(cx+90,cy+205,150,28))+faint(arrow(x+60,y+60,x+140,y+140),.8)+tx(x,y-14,l,28);});
-  return wrap('Lezione 10 · Ombre e retini','Una sfera, quattro tecniche',b);}}
-];
-let doneSet=new Set();try{doneSet=new Set(JSON.parse(localStorage.getItem('taccuino.done')||'[]'));}catch(e){}
 const svgUrl=s=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+
+/* ---- costruttori di forme riusati nelle lezioni ---- */
+function cub(vx,vy,x,y,w,h,k){const b=(px,py)=>[vx+(px-vx)*k,vy+(py-vy)*k],P=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],Q=P.map(p=>b(...p));
+  return rc(x,y,w,h)+poly(Q)+P.map((p,i)=>ln(p[0],p[1],Q[i][0],Q[i][1])).join('');}
+function rayY(x,p,v){return p[1]+(x-p[0])/(v[0]-p[0])*(v[1]-p[1]);}
+function eyeSm(x,y,w,flip=1){return pa(`M${x-w} ${y+6} Q${x} ${y-w*.7} ${x+w} ${y+6}`,'stroke-width="7"')+pa(`M${x-w} ${y+6} Q${x} ${y+w*.3} ${x+w} ${y+6}`,'stroke-width="3"')+ci(x,y-3,w*.34,`fill="${INK}" stroke="none"`);}
+function faceOut(cx,cy,r){const ch=cy+1.65*r;return ci(cx,cy,r)+pa(`M${cx-.82*r} ${cy+.57*r} Q${cx-.5*r} ${cy+1.5*r} ${cx} ${ch} Q${cx+.5*r} ${cy+1.5*r} ${cx+.82*r} ${cy+.57*r}`);}
+function cubicPt(p0,p1,p2,p3,t){const u=1-t,f=(a,b,c,d)=>u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d;return [f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])];}
+function lerpAtY(pts,y){let lo=0,hi=1;for(let i=0;i<30;i++){const m=(lo+hi)/2;if(cubicPt(...pts,m)[1]<y)lo=m;else hi=m;}return cubicPt(...pts,lo);}
+function shadowReg(cx,cy,r){const a=.7071*r;return `M${f1(cx+a)} ${f1(cy-a)} A${r} ${r} 0 0 1 ${f1(cx-a)} ${f1(cy+a)} Q${f1(cx+.3*r)} ${f1(cy+.3*r)} ${f1(cx+a)} ${f1(cy-a)}Z`;}
+function clipG(cx,cy,r,inner){const id='c'+(++_cid);return `<clipPath id="${id}"><path d="${shadowReg(cx,cy,r)}"/></clipPath><g clip-path="url(#${id})">${inner}</g>`;}
+function hatchD(cx,cy,r,gap,dir){let s='';for(let c=-2*r;c<=2*r;c+=gap){if(dir>0)s+=ln(cx-1.5*r,cy+c+1.5*r,cx+1.5*r,cy+c-1.5*r);else s+=ln(cx-1.5*r,cy+c-1.5*r,cx+1.5*r,cy+c+1.5*r);}return s;}
+function sphereBase(cx,cy,r){return ci(cx,cy,r);}
+
+/* ---- moduli ---- */
+const MODS=[
+ {t:'Mano e occhio',d:'Prima si allena il gesto, poi lo sguardo. Dieci minuti di questo modulo valgono come riscaldamento prima di qualsiasi disegno.'},
+ {t:'Forme e volume',d:'Ogni oggetto è fatto di sfere, cubi, cilindri e coni. Qui impari a farli «girare» nello spazio con luce e ombra.'},
+ {t:'Prospettiva',d:'Come far scomparire la pagina e far vedere uno spazio: orizzonte, punti di fuga, stanze ed edifici.'},
+ {t:'Il volto manga',d:'Dalla costruzione di una testa agli occhi, alle espressioni: il cuore del disegno di personaggi.'},
+ {t:'Corpo e mani',d:'Proporzioni, pose con energia, mani credibili e personaggi in versione «chibi».'},
+ {t:'Inchiostro e tavole',d:'Dal tratto pulito ai retini, fino all’impaginazione di una tavola e al foglio di un tuo personaggio.'}
+];
+
+/* ---- lezioni: ogni passo = [testo, tratti nuovi, linee di costruzione] ---- */
+const LESSONS=[];
+const addL=o=>{o.n=LESSONS.length+1;LESSONS.push(o);};
+
+addL({m:0,t:'Gesto e riscaldamento',lv:'Base',min:15,
+ goal:'Avere un tratto sicuro e rilassato: linee lunghe, decise, senza tremolio.',
+ intro:'Un tratto sicuro nasce dal movimento di braccio e spalla, non dalle dita. Questo riscaldamento si fa all’inizio di ogni sessione, anche solo per cinque minuti.',
+ tip:'Cinque minuti ogni giorno valgono più di un’ora una volta al mese. Con «Annulla» puoi sbagliare quanto vuoi: sbagliare è parte dell’esercizio.',
+ err:['Appoggiare il polso e muovere solo le dita: il tratto viene corto e tremolante.','Andare piano per «non sbagliare»: le linee lente tremano di più di quelle veloci.','Guardare la punta della penna invece del punto di arrivo.'],
+ drills:['Riempi una pagina di linee parallele, una fila diversa per ogni direzione (orizzontali, verticali, diagonali).','Fai 20 linee da punto a punto, dalla più corta alla più lunga.','Disegna una spirale grande e una piccola, in senso orario e antiorario.'],
+ chk:['Le linee sono lunghe e scorrevoli, non spezzettate.','Le linee parallele sono più o meno alla stessa distanza.','Le linee tra due punti finiscono vicino al punto di arrivo.'],
+ st:[
+ ['Siediti comodo, tablet leggermente inclinato. Muovi tutto l’avambraccio dal gomito: nella zona in alto a sinistra riempi il riquadro di linee parallele inclinate, veloci e decise.',
+  Array.from({length:11},(_,i)=>ln(70+i*38,300,120+i*38,70)).join(''),rc(40,40,420,290,10)],
+ ['Nella zona in alto a destra collega ogni punto di sinistra al suo punto di destra con una sola linea. Meglio una linea decisa e un po’ storta che una tremolante.',
+  Array.from({length:6},(_,i)=>ln(570,80+i*45,930,70+((i*37)%5)*50+20)).join(''),
+  Array.from({length:6},(_,i)=>ci(570,80+i*45,6)+ci(930,70+((i*37)%5)*50+20,6)).join('')],
+ ['Nella zona in basso a sinistra traccia una linea a zigzag senza staccare la penna, mantenendo sempre lo stesso ritmo e la stessa altezza.',
+  pa('M60 480 L110 400 L160 560 L210 400 L260 560 L310 400 L360 560 L410 400 L450 480'),
+  ln(60,400,450,400)+ln(60,560,450,560)],
+ ['Nella zona in basso a destra disegna una spirale partendo dal centro verso l’esterno, poi ripassa dal fuori verso il dentro. Il polso resta fermo.',
+  pa('M730 480 '+Array.from({length:40},(_,i)=>{const a=i*.55,rr=4+i*3.6;return 'L'+f1(730+rr*Math.cos(a))+' '+f1(480+rr*Math.sin(a));}).join(' ')),
+  ci(730,480,4)]
+ ]});
+
+addL({m:0,t:'Curve, cerchi ed ellissi',lv:'Base',min:20,
+ goal:'Chiudere un cerchio in un solo gesto e disegnare ellissi regolari, la base di ogni forma tonda.',
+ intro:'Teste, occhi, cilindri, ruote: quasi tutto ciò che disegni parte da un cerchio o da un’ellisse. Si impara «ripassando a vuoto» sul foglio prima di toccarlo.',
+ tip:'Prima di scendere con la penna fai due o tre giri in aria sopra il foglio: la mano memorizza il gesto.',
+ err:['Chiudere il cerchio a piccoli pezzi: ottieni una forma con scalini.','Ellissi con punte appuntite: ruota il gesto in modo continuo.','Cercare la perfezione: un cerchio «vivo» e leggermente irregolare è accettabile.'],
+ drills:['20 cerchi di dimensioni diverse, ognuno in un solo gesto.','10 ellissi inclinate a destra e 10 a sinistra.','Una fila di ellissi concentriche sempre più strette, come anelli.'],
+ chk:['I cerchi si chiudono con pochi millimetri di sovrapposizione.','Le ellissi sono lisce, senza punte.','Le ellissi concentriche hanno lo stesso asse.'],
+ st:[
+ ['Disegna onde regolari tra le due linee guida: movimento morbido, altezza costante.',
+  pa('M50 150 C150 60 200 240 300 150 S450 60 460 150')+pa('M50 250 C150 160 200 340 300 250 S450 160 460 250'),
+  ln(40,95,470,95)+ln(40,205,470,205)+ln(40,295,470,295)],
+ ['Cerchi in un gesto solo. Parti sempre dallo stesso punto, in alto, e chiudi dove sei partito. Fai alcuni giri in aria, poi scendi.',
+  ci(620,150,55)+ci(740,150,40)+ci(840,150,60)+ci(920,140,26),ci(620,150,3)+ci(740,150,3)+ci(840,150,3)],
+ ['Ellissi: cerchi schiacciati. Inclinane una a destra e una a sinistra senza cambiare il ritmo del gesto.',
+  el(130,480,95,36,-25)+el(365,480,95,36,25),ln(40,480,470,480)],
+ ['Ellissi concentriche: stesso centro, stesso asse, ma sempre più strette. Servono per cilindri, tazze, ruote.',
+  el(730,500,170,90)+el(730,500,140,72)+el(730,500,110,55)+el(730,500,80,38)+el(730,500,50,20),ln(730,380,730,620)]
+ ]});
+
+addL({m:0,t:'Misurare a occhio',lv:'Base',min:20,
+ goal:'Copiare una forma nelle giuste proporzioni usando punti di riferimento e linee di controllo.',
+ intro:'Il disegno sembra «sbagliato» quasi sempre per un problema di proporzioni. Si risolve con un metodo: scatola contenitore, metà, confronti.',
+ tip:'Se qualcosa non ti convince, capovolgi la pagina: vedrai gli errori come linee e non come «una casa».',
+ err:['Partire dai dettagli (porta, finestra) prima di aver stabilito la forma intera.','Non controllare: dopo ogni parte guarda larghezza e altezza rispetto alla scatola.','Credere di ricordare le forme: guarda il modello più spesso di quanto guardi il foglio.'],
+ drills:['Copia 5 oggetti semplici davanti a te (tazza, telefono, scarpa) partendo sempre dalla scatola contenitore.','Disegna la stessa casa a metà, a tre quarti e a grandezza doppia.','Copia un disegno capovolto.'],
+ chk:['La figura riempie bene la scatola, senza spazi vuoti strani.','Le parti principali cadono dove cadono nel modello.','Le linee di controllo orizzontali e verticali confermano l’allineamento.'],
+ st:[
+ ['Questa casa è il modello. Osservala: ha una larghezza, un’altezza e una linea del tetto. Ripassala una volta per capire le sue forme.',
+  pa('M80 560 L80 360 L230 220 L380 360 L380 560 Z')+rc(190,440,80,120)+rc(110,390,50,50),''],
+ ['Prima di copiare, disegna la scatola contenitore: un rettangolo che racchiude tutto il modello. Ti dà larghezza e altezza da rispettare.',
+  '',rc(70,215,320,355)+ln(70,215,390,570)+ln(390,215,70,570)],
+ ['Dividi la scatola a metà in verticale e orizzontale. Ora sai dove cade il centro: il colmo del tetto è sull’asse verticale, la porta è ai due terzi in basso.',
+  '',ln(230,215,230,570)+ln(70,392,390,392)],
+ ['Copia la casa nel riquadro a destra: prima la scatola della stessa altezza e larghezza, poi le linee principali, infine i dettagli.',
+  pa('M570 560 L570 360 L720 220 L870 360 L870 560 Z')+rc(680,440,80,120)+rc(600,390,50,50),rc(560,215,320,355)],
+ ['Verifica: da ogni punto importante prolunga una linea orizzontale o verticale fino al modello e controlla che le due case siano allineate.',
+  '',ln(380,220,720,220)+ln(380,360,870,360)+ln(380,560,870,560)+ln(230,570,230,620)+ln(720,570,720,620)]
+ ]});
+
+addL({m:1,t:'Sfera, luce e ombra',lv:'Base',min:25,
+ goal:'Dare volume a una forma tonda con una sorgente di luce chiara e tre zone: luce, ombra, ombra a terra.',
+ intro:'La luce trasforma un cerchio piatto in una sfera. Basta decidere da dove arriva la luce e ombreggiare il lato opposto, con una morbida transizione.',
+ tip:'Decidi la luce prima di ombreggiare e non cambiarla: tutti gli oggetti di una scena devono avere ombre coerenti.',
+ err:['Ombra che ricopre metà sfera con un bordo netto: serve una transizione (il terminatore).','Niente ombra a terra: la sfera sembra galleggiare.','Lasciare il lato più scuro troppo vicino al bordo: mantieni sempre un po’ di luce riflessa.'],
+ drills:['Disegna 6 sfere con la luce da direzioni diverse (alto, sinistra, destra, davanti, dietro).','Ombreggia una sfera con soli tratti paralleli, poi con puntini.','Ripeti con un uovo e con un sasso irregolare.'],
+ chk:['La luce arriva sempre dalla stessa parte.','L’ombra propria segue la curva della sfera.','L’ombra a terra parte dal punto di contatto.'],
+ st:[
+ ['Disegna una sfera: un cerchio grande in un solo gesto, appoggiato a una linea di terra.',
+  ci(500,330,200)+ln(60,530,940,530),''],
+ ['Stabilisci la luce: la freccia viene dall’alto a sinistra. Il lato opposto (in basso a destra) sarà l’ombra.',
+  arrow(120,90,300,230),''],
+ ['Traccia il terminatore: la curva che separa luce e ombra. Segue la rotondità della sfera, non è una linea retta.',
+  '',pa(`M641 189 Q545 375 359 471`)],
+ ['Ombreggia la zona d’ombra: tratti paralleli che seguono la curva, più fitti verso il bordo, più radi vicino al terminatore.',
+  clipG(500,330,200,hatchD(500,330,200,16,1)),''],
+ ['Aggiungi l’ombra a terra: un’ellisse scura dal lato opposto alla luce, che parte dal punto di contatto. E lascia una sottile luce riflessa sul bordo in basso.',
+  el(650,538,190,26,0).replace('/>',' fill="#8d98a8" fill-opacity=".55" stroke="none"/>')+pa('M610 505 Q560 535 500 536','stroke-width="3"'),'']
+ ]});
+
+addL({m:1,t:'Il cubo',lv:'Base',min:25,
+ goal:'Costruire un cubo trasparente, con tutti gli spigoli, e darle volume con tre valori.',
+ intro:'Un cubo disegnato con tutte le linee, anche quelle nascoste, è un cubo che «sta in piedi». Poi con tre toni di grigio diventa solido.',
+ tip:'Ripassa con tratto deciso solo gli spigoli che vedi, e lascia leggeri quelli nascosti: la costruzione resta e il solido risalta.',
+ err:['Spigoli paralleli che non sono davvero paralleli: controlla guardando la pagina da lontano.','Quadrato posteriore più grande o più piccolo del frontale senza motivo.','Tre facce con lo stesso tono: non si capisce dove sia la luce.'],
+ drills:['10 cubi veloci, ognuno costruito con i due quadrati e i quattro spigoli.','Disegna un cubo visto dall’alto, uno dal basso, uno ruotato.','Impila tre cubi e ombreggiali con la stessa luce.'],
+ chk:['Gli spigoli paralleli sembrano paralleli.','Il quadrato dietro ha la stessa misura di quello davanti.','Tre toni diversi: faccia alta più chiara, laterale più scura.'],
+ st:[
+ ['Disegna un quadrato: è la faccia frontale del cubo. Lati uguali, angoli a squadra.',
+  rc(220,290,260,260),''],
+ ['Disegna un secondo quadrato uguale, spostato in alto a destra. Ti darà la faccia posteriore. Usa lo stesso spostamento in orizzontale e in verticale.',
+  '',rc(350,170,260,260)],
+ ['Collega i quattro angoli del quadrato davanti ai quattro angoli del quadrato dietro. Ora il cubo è trasparente: vedi tutti gli spigoli.',
+  ln(220,290,350,170)+ln(480,290,610,170)+ln(480,550,610,430)+ln(220,550,350,430),''],
+ ['Ombreggia con tre valori: la faccia superiore la più chiara (luce dall’alto), la frontale media, la laterale destra la più scura.',
+  poly([[220,290],[480,290],[610,170],[350,170]],'fill="#e6e9ef" fill-opacity=".8" stroke="none"')+poly([[480,290],[610,170],[610,430],[480,550]],'fill="#6b7686" fill-opacity=".75" stroke="none"')+poly([[220,290],[480,290],[480,550],[220,550]],'fill="#aab3c0" fill-opacity=".5" stroke="none"'),''],
+ ['Aggiungi l’ombra a terra, dal lato opposto alla luce, partendo dagli spigoli bassi.',
+  poly([[480,550],[610,430],[800,470],[660,590]],'fill="#8d98a8" fill-opacity=".5" stroke="none"'),'']
+ ]});
+
+addL({m:1,t:'Cilindro e cono',lv:'Base',min:25,
+ goal:'Disegnare cilindri e coni con ellissi corrette: il trucco per tazze, torri, cappelli, imbuti.',
+ intro:'Un cilindro è un’ellisse sopra, un’ellisse sotto e due lati dritti. Il cono ha la stessa base ma una punta sull’asse. Attenzione: l’ellisse sotto si vede solo per metà.',
+ tip:'Più l’ellisse è vicina all’altezza degli occhi (all’orizzonte), più è schiacciata; più è lontana, più è tonda.',
+ err:['Ellissi con la punta come una mandorla: devono essere tonde.','Ellisse in basso uguale a quella in alto, ma disegnata intera: se ne vede solo metà.','Lati che non toccano esattamente i bordi delle ellissi.'],
+ drills:['10 cilindri con ellissi sempre più tonde (vista dall’alto) e poi schiacciate.','5 coni con la punta in posizioni diverse.','Disegna un barattolo, una torre e un imbuto partendo da queste forme.'],
+ chk:['Le ellissi sono simmetriche rispetto all’asse.','I lati toccano le ellissi nel punto più largo.','La punta del cono sta sull’asse della base.'],
+ st:[
+ ['Traccia l’asse verticale e disegna l’ellisse superiore del cilindro. L’asse passa per il centro dell’ellisse.',
+  el(290,190,130,40),ln(290,130,290,590)],
+ ['Disegna la metà inferiore dell’ellisse in basso, della stessa larghezza di quella in alto. È solo un arco: l’altra metà è nascosta.',
+  pa('M160 520 A130 40 0 0 0 420 520'),''],
+ ['Unisci le due ellissi con due linee verticali che toccano i punti più larghi.',
+  ln(160,190,160,520)+ln(420,190,420,520),''],
+ ['Ora il cono: stessa base a mezz’ellisse, ma la punta sta sull’asse, in alto. Prima la base, poi la punta.',
+  pa('M600 520 A130 40 0 0 0 860 520')+ci(730,150,6),ln(730,150,730,540)],
+ ['Unisci i due lati della base alla punta. Poi ombreggia con tratti paralleli il lato opposto alla luce, su entrambi i solidi.',
+  ln(600,520,730,150)+ln(860,520,730,150)+Array.from({length:6},(_,i)=>ln(335+i*13,215+i*6,335+i*13,550-i*2)).join('')+Array.from({length:5},(_,i)=>{const x=758+i*16,y0=150+(x-730)*370/130+14;return ln(x,y0,x+8,510);}).join(''),'']
+ ]});
+
+addL({m:1,t:'Oggetti con le forme base',lv:'Intermedio',min:30,
+ goal:'Scomporre un oggetto quotidiano in forme semplici e ridisegnarlo con volume.',
+ intro:'Una tazza è un cilindro con un manico, un albero è un cono su un cilindro. Se sai vedere le forme, puoi disegnare qualsiasi oggetto.',
+ tip:'Prima di disegnare un oggetto chiediti: quali forme base lo compongono? Poi disegna solo quelle.',
+ err:['Partire dal manico o dal dettaglio.','Ellisse interna uguale a quella esterna: l’interno ha un bordo spesso.','Dimenticare l’ombra a terra: l’oggetto sembra incollato.'],
+ drills:['Disegna 5 oggetti di casa scomponendoli prima in forme (tazza, bottiglia, scatola, lampada, libro).','Disegna lo stesso oggetto da tre altezze degli occhi diverse.','Disegna un oggetto a tua scelta e ombreggialo con la stessa luce di tutti gli altri.'],
+ chk:['Si riconoscono le forme base sotto l’oggetto.','L’ellisse in alto ha la stessa larghezza del cilindro.','C’è un’ombra a terra coerente con la luce.'],
+ st:(()=>{
+  const cx=420,sx=x=>520+34*Math.sqrt(Math.max(0,1-((x-cx)/140)**2));
+  return [
+ ['Una tazza è un cilindro. Disegna l’ellisse superiore, i due lati e la metà inferiore della base.',
+  el(cx,210,140,42)+ln(cx-140,210,cx-140,520)+ln(cx+140,210,cx+140,520)+pa(`M${cx-140} 520 A140 42 0 0 0 ${cx+140} 520`),ln(cx,150,cx,580)],
+ ['Dentro l’ellisse in alto disegna la bocca della tazza: un’ellisse più piccola, che dà lo spessore del bordo.',
+  el(cx,214,122,31),''],
+ ['Il manico: una curva a C sul lato, con una seconda curva più piccola all’interno che ne dà lo spessore.',
+  pa('M556 270 C720 250 720 460 548 450')+pa('M552 312 C650 306 650 408 546 402'),''],
+ ['Ombreggia il lato opposto alla luce con tratti verticali e aggiungi l’ombra a terra.',
+  Array.from({length:6},(_,i)=>{const x=495+i*13;return ln(x,248+i*3,x,sx(x)-4);}).join('')+el(560,572,190,24).replace('/>',' fill="#8d98a8" fill-opacity=".5" stroke="none"/>'),'']
+  ];})()
+ });
+
+addL({m:2,t:'L’orizzonte e il punto di vista',lv:'Base',min:25,
+ goal:'Capire che la linea dell’orizzonte è l’altezza dei tuoi occhi e decide cosa vedi di ogni oggetto.',
+ intro:'Prima dei punti di fuga viene l’orizzonte. È una linea immaginaria all’altezza dei tuoi occhi: tutto ciò che sta sotto lo vedi dall’alto, tutto ciò che sta sopra lo vedi dal basso.',
+ tip:'Per trovare l’orizzonte in una scena reale: alza la mano all’altezza degli occhi, guarda dritto davanti a te. Quella è la linea.',
+ err:['Disegnare ogni oggetto con un orizzonte diverso.','Personaggi lontani con la testa sopra o sotto l’orizzonte: se tutti hanno la stessa altezza, le teste stanno sull’orizzonte.','Orizzonte a metà pagina per abitudine: sceglilo per il tipo di scena.'],
+ drills:['Disegna la stessa fila di scatole con orizzonte alto, a metà e basso.','Disegna 5 persone a distanza diversa con le teste sull’orizzonte.','Fotografa una strada e traccia l’orizzonte sulla foto.'],
+ chk:['Tutte le teste delle persone adulte toccano l’orizzonte.','Sotto l’orizzonte vedi la faccia superiore degli oggetti, sopra vedi quella inferiore.','Gli oggetti più lontani sono più piccoli.'],
+ st:[
+ ['Traccia una linea orizzontale: è l’orizzonte, cioè l’altezza dei tuoi occhi. Tutto parte da qui.',
+  ln(40,300,960,300)+tx(520,285,'ORIZZONTE = altezza degli occhi',24),''],
+ ['Disegna tre persone a distanze diverse sullo stesso terreno. Le teste (gli occhi) stanno tutte sull’orizzonte; i piedi salgono verso l’orizzonte man mano che si allontanano.',
+  [[150,640],[330,470],[450,385]].map(([x,fy])=>{const H=fy-300,r=H*.065,hy=300+H*.52;return ci(x,300,r)+ln(x,300+r,x,hy)+ln(x,300+H*.15,x-H*.15,300+H*.4)+ln(x,300+H*.15,x+H*.15,300+H*.4)+ln(x,hy,x-H*.12,fy)+ln(x,hy,x+H*.12,fy);}).join(''),''],
+ ['Un oggetto sotto l’orizzonte lo vedi dall’alto: oltre alla faccia frontale vedi la faccia superiore.',
+  rc(600,420,150,100)+poly([[600,420],[750,420],[722,386],[628,386]])+tx(600,560,'sotto: vedo sopra',22),''],
+ ['Un oggetto sopra l’orizzonte lo vedi dal basso: vedi la faccia inferiore, non quella superiore.',
+  rc(600,100,150,100)+poly([[600,200],[750,200],[722,236],[628,236]])+tx(600,90,'sopra: vedo sotto',22),'']
+ ]});
+
+addL({m:2,t:'Prospettiva a un punto',lv:'Intermedio',min:30,
+ goal:'Disegnare cubi, strade e corridoi visti di fronte con un solo punto di fuga.',
+ intro:'Se guardi un corridoio dritto davanti a te, tutte le linee che vanno in profondità convergono in un solo punto sull’orizzonte: il punto di fuga. Le linee orizzontali e verticali restano orizzontali e verticali.',
+ tip:'Se l’orizzonte è sopra il cubo, lo vedi dall’alto; se è sotto, dal basso. Un cubo che attraversa l’orizzonte è all’altezza dei tuoi occhi.',
+ err:['Linee in profondità che non puntano al punto di fuga: usa un righello immaginario.','Quadrato posteriore con lo stesso lato del frontale: deve essere più piccolo.','Inclinare le verticali: restano sempre verticali.'],
+ drills:['5 cubi in posizioni diverse attorno al punto di fuga.','Una strada con edifici ai lati, tutti con lo stesso punto di fuga.','Un corridoio con porte e pavimento a quadrotti.'],
+ chk:['Tutte le linee in profondità puntano al punto di fuga.','Le orizzontali sono orizzontali e le verticali verticali.','Gli oggetti più lontani sono più piccoli.'],
+ st:[
+ ['Traccia l’orizzonte e segna un punto di fuga al centro. Ogni linea in profondità dovrà puntare lì.',
+  ln(40,300,960,300)+ci(500,300,9)+tx(520,280,'punto di fuga',22),''],
+ ['Disegna la faccia frontale del primo cubo: un quadrato sotto l’orizzonte, a destra.',
+  rc(580,360,170,170),''],
+ ['Dai quattro angoli del quadrato traccia raggi leggeri verso il punto di fuga. Questi sono i tuoi spigoli in profondità.',
+  '',[[580,360],[750,360],[750,530],[580,530]].map(p=>ln(p[0],p[1],500,300)).join('')],
+ ['Scegli la profondità: disegna un quadrato più piccolo tra i raggi, con i lati paralleli a quello frontale. Poi ripassa gli spigoli in profondità.',
+  cub(500,300,580,360,170,170,.6),''],
+ ['Aggiungi un secondo cubo sopra l’orizzonte, a sinistra, con lo stesso punto di fuga: vedrai la sua faccia inferiore.',
+  cub(500,300,150,100,150,150,.6),'']
+ ]});
+
+addL({m:2,t:'Prospettiva a due punti',lv:'Intermedio',min:35,
+ goal:'Disegnare edifici e oggetti visti «d’angolo» con due punti di fuga.',
+ intro:'Quando guardi un edificio d’angolo vedi due facciate che fuggono verso due punti diversi sull’orizzonte. Lo spigolo più vicino resta verticale.',
+ tip:'Tieni i punti di fuga molto distanti tra loro (anche fuori pagina): se sono troppo vicini gli oggetti sembrano deformati.',
+ err:['Punti di fuga troppo vicini: gli edifici sembrano storti.','Verticali inclinate: restano sempre verticali.','Finestre e porte che non seguono i raggi.'],
+ drills:['5 scatole d’angolo con orizzonti diversi.','Una piccola casa con tetto, porta e finestre.','Una strada in prospettiva con due edifici sovrapposti.'],
+ chk:['Tutte le linee a sinistra puntano al punto sinistro, tutte a destra al destro.','Le verticali sono verticali.','Finestre e porte seguono i raggi.'],
+ st:(()=>{const VL=[60,300],VR=[940,300],yL=x=>rayY(x,[500,250],VL),yR=x=>rayY(x,[500,250],VR),bL=x=>rayY(x,[500,520],VL),bR=x=>rayY(x,[500,520],VR);
+  const win=(x1,x2,vp,t,b)=>poly([[x1,rayY(x1,[500,t],vp)],[x2,rayY(x2,[500,t],vp)],[x2,rayY(x2,[500,b],vp)],[x1,rayY(x1,[500,b],vp)]]);
+  return [
+ ['Traccia l’orizzonte e due punti di fuga, uno a sinistra e uno a destra, molto distanti tra loro.',
+  ln(30,300,970,300)+ci(60,300,9)+ci(940,300,9)+tx(60,275,'PdF sx',22)+tx(940,275,'PdF dx',22,'end'),''],
+ ['Disegna lo spigolo più vicino a te: una linea verticale. Lo spigolo dell’edificio sarà qui.',
+  ln(500,250,500,520),''],
+ ['Dalla cima e dalla base dello spigolo traccia raggi leggeri verso i due punti di fuga.',
+  '',ln(500,250,60,300)+ln(500,250,940,300)+ln(500,520,60,300)+ln(500,520,940,300)],
+ ['Chiudi le due facciate con due verticali, una a sinistra e una a destra, tra i raggi. Le verticali restano verticali.',
+  ln(300,yL(300),300,bL(300))+ln(720,yR(720),720,bR(720))+ln(500,250,300,yL(300))+ln(500,250,720,yR(720))+ln(500,520,300,bL(300))+ln(500,520,720,bR(720)),''],
+ ['Aggiungi una finestra sulla parete di sinistra e una porta su quella di destra. Usa raggi verso lo stesso punto di fuga della parete.',
+  win(340,440,VL,330,400)+win(560,650,VR,400,520),'']
+  ];})()
+ });
+
+addL({m:3,t:'Il volto di fronte',lv:'Base',min:35,
+ goal:'Costruire un volto frontale in proporzione: cranio, assi, mascella, occhi, naso e bocca.',
+ intro:'Ogni volto parte da uno schema: un cerchio per il cranio, due assi, una mascella. Poi si personalizza: negli stili manga gli occhi si ingrandiscono e il mento si affina.',
+ tip:'Disegna prima la costruzione con tratto leggero e solo alla fine ripassa con più forza.',
+ err:['Occhi troppo in alto: stanno a metà dell’altezza della testa, non più su.','Mento troppo corto: dal cerchio si scende ancora di mezza testa.','Orecchie fuori allineamento: stanno tra la linea degli occhi e quella del naso.'],
+ drills:['10 cerchi con assi, solo costruzione, molto veloci.','5 volti completi variando larghezza e mento.','Un volto con gli occhi piccoli e uno con occhi molto grandi.'],
+ chk:['Gli occhi sono a metà dell’altezza della testa.','Naso e bocca stanno sull’asse.','Le orecchie sono tra la linea degli occhi e quella del naso.'],
+ st:[
+ ['Disegna un cerchio grande: è il cranio. Aggiungi l’asse verticale del volto, che attraversa il centro.',
+  ci(500,250,180),ln(500,45,500,572)],
+ ['La linea degli occhi sta a metà dell’altezza totale della testa (dalla cima del cranio al mento), non a metà del cerchio.',
+  '',ln(300,309,700,309)+tx(710,316,'occhi',22)],
+ ['Disegna la mascella: dai lati del cranio, poco sotto la linea degli occhi, scendi a V arrotondata fino al mento.',
+  pa('M352 353 Q410 547 500 547 Q590 547 648 353'),''],
+ ['Segna il naso a due quinti tra gli occhi e il mento, e la bocca a circa due terzi.',
+  '',ln(465,404,535,404)+ln(450,476,550,476)+tx(550,411,'naso',22)+tx(565,483,'bocca',22)],
+ ['Le orecchie vanno tra la linea degli occhi e quella del naso, ai lati del cranio.',
+  el(350,356,20,42)+el(650,356,20,42),''],
+ ['Ora le features, semplici: occhi, sopracciglia, naso corto, bocca piccola. Ripassa solo il necessario.',
+  eyeSm(430,309,40)+eyeSm(570,309,40)+pa('M382 268 Q430 246 478 266')+pa('M522 266 Q570 246 618 268')+pa('M494 350 L486 400 Q500 412 516 400')+pa('M465 474 Q500 490 535 474'),'']
+ ]});
+
+addL({m:3,t:'Il volto di tre quarti',lv:'Intermedio',min:40,
+ goal:'Ruotare il volto: asse curvo, occhi diversi per grandezza, orecchio visibile.',
+ intro:'Il volto di tre quarti è il più usato nei fumetti. L’asse non è più al centro ma curvo e spostato verso il lato in cui guarda il personaggio.',
+ tip:'Pensa al cranio come a una sfera: ruoti la sfera e gli assi si curvano insieme a lei.',
+ err:['Asse dritto: sembra un volto frontale con occhi spostati.','Occhi uguali: quello più lontano è più stretto.','Orecchio fuori posto: sta dalla parte opposta allo sguardo.'],
+ drills:['10 sfere con gli assi ruotati a destra e a sinistra.','5 volti di tre quarti con sguardo alto, basso, in avanti.','Un volto da frontale a tre quarti a profilo, in tre passaggi.'],
+ chk:['L’asse è curvo e spostato nella direzione dello sguardo.','L’occhio lontano è più stretto di quello vicino.','Naso e bocca stanno sull’asse curvo.'],
+ st:(()=>{const r=180,cx=500,cy=250,P=[[cx+.15*r,cy-.98*r],[cx+.75*r,cy-.4*r],[cx+.75*r,cy+.8*r],[cx+.42*r,cy+1.62*r]],eY=cy+.31*r,nY=eY+.4*1.31*r,mY=eY+.7*1.31*r,ax=y=>lerpAtY(P,y)[0];
+  return [
+ ['Disegna la sfera del cranio. Aggiungi l’asse del volto, curvo e spostato a destra, e la linea degli occhi, curva anch’essa.',
+  ci(cx,cy,r),pa(`M${P[0][0]} ${P[0][1]} C${P[1][0]} ${P[1][1]} ${P[2][0]} ${P[2][1]} ${P[3][0]} ${P[3][1]}`)+pa(`M${cx-.97*r} ${cy+.25*r} Q${cx+.1*r} ${cy+.45*r} ${cx+.97*r} ${cy+.2*r}`)],
+ ['Disegna la mascella: dal lato posteriore fino al mento, che sta sull’asse, e dal mento verso la parte frontale del volto.',
+  pa(`M${cx-.8*r} ${cy+.4*r} Q${cx-.55*r} ${cy+1.3*r} ${P[3][0]} ${P[3][1]} Q${cx+.9*r} ${cy+1.15*r} ${cx+.93*r} ${cy+.25*r}`),''],
+ ['Segna naso e bocca sull’asse curvo: sono due piccoli archi centrati sull’asse.',
+  '',pa(`M${ax(nY)-30} ${nY+4} Q${ax(nY)} ${nY+12} ${ax(nY)+30} ${nY-2}`)+pa(`M${ax(mY)-40} ${mY+2} Q${ax(mY)} ${mY+10} ${ax(mY)+34} ${mY-4}`)],
+ ['L’orecchio sta sul lato opposto allo sguardo, tra la linea degli occhi e quella del naso.',
+  el(cx-.78*r,(eY+nY)/2,18,42,8),''],
+ ['Disegna gli occhi: quello vicino (a sinistra dell’asse) più largo, quello lontano più stretto.',
+  eyeSm(ax(eY)-62,eY,38)+eyeSm(ax(eY)+52,eY,26),''],
+ ['Ripassa naso e bocca: il naso punta nella direzione dello sguardo, la bocca è più corta dal lato lontano.',
+  pa(`M${ax(eY)-6} ${eY+30} L${ax(nY)-14} ${nY-4} Q${ax(nY)-2} ${nY+10} ${ax(nY)+16} ${nY-4}`)+pa(`M${ax(mY)-34} ${mY} Q${ax(mY)} ${mY+12} ${ax(mY)+26} ${mY-4}`),'']
+  ];})()
+ });
+
+addL({m:3,t:'Il volto di profilo',lv:'Intermedio',min:35,
+ goal:'Disegnare un profilo con le proporzioni giuste: fronte, naso, labbra, mento, orecchio.',
+ intro:'Il profilo è la silhouette più riconoscibile di un personaggio. Si costruisce con un cerchio per il cranio e una linea ondulata per il volto.',
+ tip:'Il profilo è come un cartone ritagliato: se la silhouette non funziona, nessun dettaglio la salva.',
+ err:['Naso e mento sullo stesso piano verticale senza che sporgano.','Orecchio troppo avanti: sta dietro la mandibola.','Cranio troppo piccolo: il profilo è profondo quanto è alto.'],
+ drills:['10 silhouette di profilo, solo il contorno.','Lo stesso volto da frontale e di profilo, a confronto.','Cambia il naso e il mento in 5 modi diversi.'],
+ chk:['Il cranio è un cerchio, non un ovale.','L’orecchio sta tra la linea degli occhi e quella del naso.','La silhouette ha naso, labbra e mento ben distinti.'],
+ st:[
+ ['Disegna il cranio come cerchio. Il piano del volto è una linea quasi verticale a sinistra; segna anche gli occhi, il naso e la bocca.',
+  ci(520,240,165),ln(355,75,355,480)+ln(340,273,520,273)+ln(340,352,520,352)+ln(340,412,520,412)+ln(355,470,580,470)],
+ ['Disegna la linea del volto: fronte, incavo del naso, punta del naso, labbra, mento, e la linea della mandibola.',
+  pa('M371 166 L358 256 L367 273 L322 345 L358 357 L355 385 L367 405 L360 420 L372 438 L363 465 L475 470 Q540 455 565 400'),''],
+ ['L’occhio di profilo è un triangolo che punta indietro, con il sopracciglio sopra.',
+  pa('M386 266 L430 268 L400 292 Z')+pa('M370 242 Q410 232 450 248'),''],
+ ['L’orecchio sta dietro la mandibola, tra la linea degli occhi e quella del naso.',
+  el(555,312,24,48,-8),ln(540,150,540,480)],
+ ['Aggiungi collo e nuca: il collo è inclinato in avanti, la nuca scende dal cranio.',
+  pa('M485 470 L490 600')+pa('M590 395 L610 600'),'']
+ ]});
+
+addL({m:3,t:'Occhi manga',lv:'Intermedio',min:35,
+ goal:'Disegnare un occhio manga completo: palpebre, iride, pupilla, riflessi, ciglia, sopracciglio.',
+ intro:'Gli occhi danno vita al personaggio. In questo stile sono grandi, con un’iride alta e piena di riflessi. Qui costruisci un occhio da zero e lo ingrandisci.',
+ tip:'Disegna l’iride come un cerchio tagliato dalla palpebra superiore: non si vede mai intera.',
+ err:['Iride intera dentro l’occhio: la palpebra superiore la taglia.','Pupilla senza riflesso: lo sguardo sembra spento.','Palpebra inferiore troppo scura: deve essere leggera.'],
+ drills:['10 occhi grandi: sguardo avanti, a destra, a sinistra, in alto.','Un occhio stanco, uno furbo, uno spalancato.','Disegna i due occhi insieme controllando che guardino lo stesso punto.'],
+ chk:['La palpebra superiore è la linea più scura.','L’iride è tagliata in alto.','C’è almeno un riflesso lasciato bianco.'],
+ st:[
+ ['Disegna la forma a mandorla: due curve che si incontrano agli angoli. L’angolo esterno è un po’ più alto di quello interno.',
+  pa('M330 360 Q470 210 670 330')+pa('M330 360 Q500 440 670 330'),ln(310,360,690,330)],
+ ['Ripassa la palpebra superiore con una linea spessa e scura. Un piccolo prolungamento in fuori dà lo stile manga.',
+  pa('M330 360 Q470 210 670 330','stroke-width="13"')+pa('M670 330 L702 306','stroke-width="9"'),''],
+ ['Disegna l’iride: un’ellisse alta, tagliata dalla palpebra superiore. Resta solo la parte dentro l’occhio.',
+  '<clipPath id="eyeclip"><path d="M330 360 Q470 210 670 330 Q500 440 330 360Z"/></clipPath><g clip-path="url(#eyeclip)">'+el(500,335,68,86)+'</g>',''],
+ ['Pupilla scura al centro e due riflessi lasciati bianchi: uno grande in alto a sinistra e uno piccolo in basso a destra.',
+  ci(500,340,32,`fill="${INK}"`)+ci(470,306,15,'fill="#fff"')+ci(528,368,7,'fill="#fff"'),''],
+ ['Palpebra inferiore sottile e leggera, più qualche ciglio che si allunga verso l’esterno.',
+  pa('M345 372 Q500 450 655 340','stroke-width="3"')+pa('M610 290 Q640 270 650 245','stroke-width="5"')+pa('M640 305 Q675 290 690 262','stroke-width="5"')+pa('M665 322 Q700 312 718 290','stroke-width="5"'),''],
+ ['Sopracciglio sopra l’occhio e una linea della piega della palpebra, sottile, sopra la palpebra scura.',
+  pa('M310 215 Q470 120 690 200','stroke-width="10"')+pa('M345 300 Q480 185 650 275','stroke-width="3"'),'']
+ ]});
+
+(function(){
+const nF=(x,y)=>pa(`M${x-10} ${y-70} Q${x-16} ${y-20} ${x-22} ${y+14}`)+pa(`M${x-34} ${y+26} Q${x-22} ${y+44} ${x-6} ${y+32}`)+pa(`M${x+34} ${y+26} Q${x+22} ${y+44} ${x+6} ${y+32}`)+pa(`M${x-6} ${y+32} Q${x} ${y+38} ${x+6} ${y+32}`);
+const n34=(x,y)=>pa(`M${x-14} ${y-70} Q${x-20} ${y} ${x-36} ${y+26} Q${x-20} ${y+44} ${x+4} ${y+38} Q${x+22} ${y+36} ${x+30} ${y+22}`)+pa(`M${x+8} ${y+36} Q${x+14} ${y+26} ${x+22} ${y+30}`);
+const nP=(x,y)=>pa(`M${x-10} ${y-70} L${x-12} ${y} L${x-48} ${y+36} L${x-14} ${y+44} Q${x} ${y+46} ${x+8} ${y+36}`);
+const mN=(x,y)=>pa(`M${x-70} ${y} Q${x-30} ${y+6} ${x} ${y+3} Q${x+30} ${y+6} ${x+70} ${y}`)+pa(`M${x-28} ${y+30} Q${x} ${y+38} ${x+28} ${y+30}`);
+const mS=(x,y)=>pa(`M${x-70} ${y-12} Q${x} ${y+34} ${x+70} ${y-12}`)+pa(`M${x-76} ${y-18} L${x-68} ${y-6}`)+pa(`M${x+76} ${y-18} L${x+68} ${y-6}`);
+const mO=(x,y)=>pa(`M${x-60} ${y-10} Q${x} ${y+60} ${x+60} ${y-10} Z`)+pa(`M${x-26} ${y+26} Q${x} ${y+12} ${x+26} ${y+26}`);
+const ear=(x,y)=>pa(`M${x-30} ${y-60} Q${x+40} ${y-80} ${x+36} ${y-10} Q${x+30} ${y+50} ${x-10} ${y+66} Q${x-30} ${y+70} ${x-34} ${y+40}`)+pa(`M${x-6} ${y-36} Q${x+22} ${y-40} ${x+16} ${y} Q${x+10} ${y+30} ${x-10} ${y+40}`);
+addL({m:3,t:'Naso, bocca e orecchie',lv:'Base',min:30,
+ goal:'Disegnare naso, bocca e orecchie con pochi tratti essenziali, da più punti di vista.',
+ intro:'Nel manga naso e bocca sono molto semplificati: spesso pochi segni bastano. Più le linee sono poche, più ognuna deve essere nel posto giusto.',
+ tip:'Se in dubbio, togli. Un naso con due puntini e una linea è già un naso.',
+ err:['Naso troppo dettagliato rispetto agli occhi: nel manga è piccolo e lieve.','Bocca simmetrica e rigida: una piccola asimmetria dà vita.','Orecchie tutte uguali: cambiale in grandezza e forma.'],
+ drills:['10 nasi in stili diversi, dal minimo al realistico.','10 bocche con espressioni diverse.','5 orecchie viste di lato.'],
+ chk:['Pochi segni, ognuno al posto giusto.','Il naso non copre gli occhi per dimensione.','Bocca e naso sono sullo stesso asse.'],
+ st:[
+ ['Naso frontale: la linea del ponte nasale, due piccoli archi per le narici e un tratto per la punta. Pochi segni bastano.',nF(170,150),''],
+ ['Naso di tre quarti e di profilo: nel tre quarti si vede una narice sola, di profilo solo la forma esterna.',n34(500,150)+nP(830,150),''],
+ ['Bocca chiusa a riposo: una linea leggermente ondulata, con il labbro inferiore indicato da un piccolo arco sotto.',mN(170,420),''],
+ ['Sorriso e bocca aperta: il sorriso è una curva con gli angoli segnati, la bocca aperta ha una forma a mezza luna con la lingua.',mS(500,420)+mO(830,420),''],
+ ['Orecchio: un arco a C esterno e un arco interno più piccolo. Sta tra la linea degli occhi e quella del naso.',ear(500,610)+tx(570,620,'Orecchio',22),'']
+ ]});})();
+
+addL({m:3,t:'Capelli',lv:'Intermedio',min:35,
+ goal:'Disegnare i capelli come masse con volume, non come singoli fili.',
+ intro:'I capelli si disegnano a gruppi: prima la massa, poi l’attaccatura, poi 3-5 ciocche grandi. I singoli fili compaiono solo alla fine, pochi.',
+ tip:'I capelli hanno volume sopra il cranio: parti dal cerchio e ingrandiscilo, non dal bordo del viso.',
+ err:['Capelli incollati al cranio: danno volume sopra la testa.','Troppi fili: disegna gruppi, non capello per capello.','Attaccatura rigida: curvala seguendo la forma della fronte.'],
+ drills:['10 sagome di capelli (corti, lunghi, mossi) su un cerchio.','Un personaggio con tre pettinature diverse.','Capelli che si muovono col vento.'],
+ chk:['I capelli hanno volume sopra al cranio.','Ci sono poche ciocche grandi, ben distinte.','Le punte sono affusolate.'],
+ st:(()=>{const r=170,cx=500,cy=270;
+  const side=(s,o)=>pa(`M${cx+s*.82*r} ${cy-.1*r} C${cx+s*(1.1+o)*r} ${cy+.5*r} ${cx+s*(1.0+o)*r} ${cy+1.1*r} ${cx+s*(.7+o*1.5)*r} ${cy+1.35*r}`);
+  return [
+ ['Parti dal volto in costruzione. Disegna la massa dei capelli: un grande arco che avvolge il cranio e lo supera, per dare volume.',
+  pa(`M${cx-1.15*r} ${cy+.3*r} C${cx-1.35*r} ${cy-1.7*r} ${cx+1.35*r} ${cy-1.7*r} ${cx+1.15*r} ${cy+.3*r}`),faceOut(cx,cy,r)],
+ ['L’attaccatura: la curva da cui nascono i capelli sulla fronte. Segue la forma del cranio e non è una linea retta.',
+  pa(`M${cx-.82*r} ${cy-.1*r} Q${cx-.3*r} ${cy-.8*r} ${cx+.05*r} ${cy-.55*r} Q${cx+.5*r} ${cy-.85*r} ${cx+.84*r} ${cy-.1*r}`),''],
+ ['Dividi i capelli ai lati in tre ciocche grandi per parte, che scendono seguendo la forma del viso.',
+  side(-1,0)+side(-1,.06)+side(-1,.12)+side(1,0)+side(1,.06)+side(1,.12),''],
+ ['Disegna la frangia a ciuffi appuntiti che scendono sulla fronte, ognuno con la punta verso il basso.',
+  pa(`M${cx-.82*r} ${cy-.1*r} L${cx-.55*r} ${cy+.2*r} L${cx-.4*r} ${cy-.35*r} L${cx-.1*r} ${cy+.25*r} L${cx+.1*r} ${cy-.45*r} L${cx+.4*r} ${cy+.2*r} L${cx+.55*r} ${cy-.3*r} L${cx+.84*r} ${cy-.1*r}`),''],
+ ['Rifinitura: un riflesso curvo sulla massa dei capelli e pochi fili per suggerire la direzione.',
+  pa(`M${cx-.6*r} ${cy-.95*r} Q${cx} ${cy-1.15*r} ${cx+.5*r} ${cy-.95*r}`,'stroke-width="3"')+pa(`M${cx-.5*r} ${cy-.85*r} Q${cx-.6*r} ${cy-.3*r} ${cx-.8*r} ${cy+.1*r}`,'stroke-width="3"')+pa(`M${cx+.4*r} ${cy-.85*r} Q${cx+.55*r} ${cy-.3*r} ${cx+.78*r} ${cy+.1*r}`,'stroke-width="3"'),'']
+  ];})()
+ });
+
+(function(){
+const emo=(cx,cy,r,t)=>{
+  const e=(s,w)=>ci(cx+s*.4*r,cy-.05*r,w,`fill="${INK}" stroke="none"`);
+  let s=el(cx,cy,r,r*1.08);
+  if(t==='joy')s+=pa(`M${cx-.57*r} ${cy+.05*r} Q${cx-.4*r} ${cy-.22*r} ${cx-.23*r} ${cy+.05*r}`)+pa(`M${cx+.23*r} ${cy+.05*r} Q${cx+.4*r} ${cy-.22*r} ${cx+.57*r} ${cy+.05*r}`)+pa(`M${cx-.7*r} ${cy-.32*r} Q${cx-.4*r} ${cy-.52*r} ${cx-.2*r} ${cy-.3*r}`)+pa(`M${cx+.7*r} ${cy-.32*r} Q${cx+.4*r} ${cy-.52*r} ${cx+.2*r} ${cy-.3*r}`)+pa(`M${cx-.45*r} ${cy+.4*r} Q${cx} ${cy+.95*r} ${cx+.45*r} ${cy+.4*r} Z`);
+  if(t==='anger')s+=ln(cx-.58*r,cy-.02*r,cx-.22*r,cy+.04*r)+ln(cx+.22*r,cy+.04*r,cx+.58*r,cy-.02*r)+e(-1,r*.05)+e(1,r*.05)+ln(cx-.7*r,cy-.45*r,cx-.15*r,cy-.2*r)+ln(cx+.7*r,cy-.45*r,cx+.15*r,cy-.2*r)+pa(`M${cx-.35*r} ${cy+.6*r} Q${cx} ${cy+.35*r} ${cx+.35*r} ${cy+.6*r}`);
+  if(t==='surprise')s+=ci(cx-.4*r,cy-.05*r,.14*r)+ci(cx+.4*r,cy-.05*r,.14*r)+e(-1,r*.04)+e(1,r*.04)+pa(`M${cx-.7*r} ${cy-.5*r} Q${cx-.4*r} ${cy-.75*r} ${cx-.15*r} ${cy-.5*r}`)+pa(`M${cx+.7*r} ${cy-.5*r} Q${cx+.4*r} ${cy-.75*r} ${cx+.15*r} ${cy-.5*r}`)+el(cx,cy+.55*r,.14*r,.2*r);
+  if(t==='sad')s+=ci(cx-.4*r,cy,.1*r,`fill="${INK}" stroke="none"`)+ci(cx+.4*r,cy,.1*r,`fill="${INK}" stroke="none"`)+ln(cx-.7*r,cy-.2*r,cx-.18*r,cy-.38*r)+ln(cx+.18*r,cy-.38*r,cx+.7*r,cy-.2*r)+pa(`M${cx-.3*r} ${cy+.6*r} Q${cx} ${cy+.45*r} ${cx+.3*r} ${cy+.6*r}`)+pa(`M${cx-.5*r} ${cy+.12*r} Q${cx-.56*r} ${cy+.3*r} ${cx-.48*r} ${cy+.34*r}`);
+  if(t==='shy')s+=pa(`M${cx-.57*r} ${cy-.02*r} Q${cx-.4*r} ${cy-.2*r} ${cx-.23*r} ${cy-.02*r}`)+pa(`M${cx+.23*r} ${cy-.02*r} Q${cx+.4*r} ${cy-.2*r} ${cx+.57*r} ${cy-.02*r}`)+ln(cx-.75*r,cy+.15*r,cx-.6*r,cy+.3*r)+ln(cx-.6*r,cy+.15*r,cx-.45*r,cy+.3*r)+ln(cx+.45*r,cy+.15*r,cx+.6*r,cy+.3*r)+ln(cx+.6*r,cy+.15*r,cx+.75*r,cy+.3*r)+pa(`M${cx-.3*r} ${cy+.55*r} q${.15*r} ${-.12*r} ${.3*r} 0 q${.15*r} ${.12*r} ${.3*r} 0`)+pa(`M${cx+.75*r} ${cy-.55*r} q${.1*r} ${.15*r} 0 ${.22*r} q${-.1*r} ${-.07*r} 0 ${-.22*r}`);
+  if(t==='det')s+=ln(cx-.7*r,cy-.28*r,cx-.15*r,cy-.24*r)+ln(cx+.15*r,cy-.24*r,cx+.7*r,cy-.28*r)+ln(cx-.55*r,cy,cx-.22*r,cy)+ln(cx+.22*r,cy,cx+.55*r,cy)+e(-1,r*.08)+e(1,r*.08)+ln(cx-.3*r,cy+.55*r,cx+.3*r,cy+.55*r);
+  return s;};
+const B=[[190,190],[500,190],[810,190],[190,510],[500,510],[810,510]],R=110;
+const lab=['Gioia','Rabbia','Sorpresa','Tristezza','Imbarazzo','Determinazione'],typ=['joy','anger','surprise','sad','shy','det'];
+const txs=['Gioia: sopracciglia alte e arcuate, occhi a mezzaluna, bocca aperta con gli angoli in su.','Rabbia: sopracciglia abbassate verso il centro, occhi stretti, bocca a linea tesa o curva in giù.','Sorpresa: sopracciglia molto alte, occhi grandi con iridi piccole, bocca a «o».','Tristezza: parte interna delle sopracciglia alzata, occhi lucidi, angoli della bocca in giù, una lacrima.','Imbarazzo: occhi a mezzaluna rovesciata, tratti diagonali sulle guance, bocca ondulata e una goccia di sudore.','Determinazione: sopracciglia dritte e basse, sguardo fisso, bocca tesa.'];
+addL({m:3,t:'Espressioni',lv:'Intermedio',min:40,
+ goal:'Far passare le emozioni con sopracciglia, occhi e bocca, lasciando invariata la testa.',
+ intro:'Le emozioni passano da tre elementi: sopracciglia, occhi, bocca. Il resto del volto resta uguale. Si parte da sei emozioni base.',
+ tip:'All’inizio esagera: nel manga l’espressione si spinge oltre il realistico. Puoi sempre ammorbidirla dopo.',
+ err:['Cambiare solo la bocca: sopracciglia e occhi contano di più.','Espressioni deboli: spingile al massimo, poi riduci.','Dimenticare i dettagli di contorno (lacrime, goccia, guance).'],
+ drills:['Disegna lo stesso volto con tutte e sei le emozioni, in fila.','Disegna 3 emozioni miste (felice-sorpreso, triste-arrabbiato...).','Copia le espressioni da uno specchio o da una foto di te.'],
+ chk:['Le sopracciglia cambiano insieme agli occhi.','Il resto del volto è identico.','Ogni emozione si riconosce in due secondi.'],
+ st:typ.map((t,i)=>[txs[i],emo(B[i][0],B[i][1],R,t)+tx(B[i][0],B[i][1]+R*1.08+34,lab[i],24,'middle'),''])
+ });})();
+
+(function(){const H=80,Y=k=>40+H*k;
+addL({m:4,t:'Il manichino: proporzioni',lv:'Intermedio',min:40,
+ goal:'Costruire un corpo in proporzione con ovali e articolazioni, prima di disegnare un personaggio.',
+ intro:'Prima la posa, poi il personaggio. Il manichino è fatto di ovali e cerchi sulle articolazioni. Come unità di misura si usa l’altezza della testa.',
+ tip:'Fai molti manichini veloci, anche di trenta secondi ciascuno: ti insegnano la posa più di un solo disegno rifinito.',
+ err:['Gambe troppo corte: il bacino sta a metà dell’altezza totale.','Spalle larghe come i fianchi: negli adulti le spalle sono di solito più larghe.','Braccia troppo corte: i polsi arrivano all’inguine.'],
+ drills:['10 manichini da 30 secondi ciascuno.','Lo stesso manichino con 5, 6, 7 e 8 teste di altezza.','Copia una foto di una persona che cammina con soli ovali e linee.'],
+ chk:['Il bacino sta a metà dell’altezza totale.','I polsi arrivano all’inguine.','Le ginocchia sono a circa tre quarti dell’altezza.'],
+ st:[
+ ['Dividi l’altezza in otto teste e disegna l’ovale della prima testa. Le linee ti servono per misurare tutto.',
+  el(500,Y(.5),31,39),Array.from({length:9},(_,k)=>ln(385,Y(k),615,Y(k))).join('')+Array.from({length:8},(_,k)=>tx(375,Y(k+.5)+8,String(k+1),22,'end')).join('')],
+ ['Aggiungi il torace (un ovale grande), il bacino (un cerchio) e il collo. Il bacino è a circa tre teste e mezza dall’alto.',
+  ln(500,Y(1),500,Y(1.3))+el(500,Y(2.2),45,64)+ci(500,Y(3.4),28),''],
+ ['Disegna la linea delle spalle (circa una testa e mezza di larghezza) e quella del bacino, e collega con la colonna.',
+  ln(440,Y(1.35),560,Y(1.35))+ln(472,Y(3.45),528,Y(3.45))+ln(500,Y(1.3),500,Y(3.1)),''],
+ ['Disegna le braccia: gomito all’altezza della vita (circa tre teste), polso all’altezza dell’inguine (circa quattro teste).',
+  pa(`M440 ${Y(1.35)} L425 ${Y(2.9)} L419 ${Y(4)}`)+pa(`M560 ${Y(1.35)} L575 ${Y(2.9)} L581 ${Y(4)}`),''],
+ ['Disegna le gambe: ginocchia a circa sei teste, caviglie a otto meno mezza. Aggiungi i piedi.',
+  pa(`M486 ${Y(3.6)} L480 ${Y(6)} L478 ${Y(7.6)}`)+pa(`M514 ${Y(3.6)} L520 ${Y(6)} L522 ${Y(7.6)}`)+el(466,Y(7.85),30,10)+el(534,Y(7.85),30,10),''],
+ ['Segna le articolazioni con piccoli cerchi: spalle, gomiti, polsi, anche, ginocchia e caviglie. Qui si piega il corpo.',
+  [[440,Y(1.35)],[560,Y(1.35)],[425,Y(2.9)],[575,Y(2.9)],[419,Y(4)],[581,Y(4)],[486,Y(3.6)],[514,Y(3.6)],[480,Y(6)],[520,Y(6)],[478,Y(7.6)],[522,Y(7.6)]].map(p=>ci(p[0],p[1],8)).join(''),'']
+ ]});})();
+
+(function(){
+const hx=(x,len)=>rc(x,380-len,46,len+30,23);
+addL({m:4,t:'Le mani',lv:'Avanzato',min:40,
+ goal:'Disegnare una mano aperta credibile con palmo, dita, pollice e nocche.',
+ intro:'Le mani spaventano tutti, ma si semplificano: un palmo quadrato, quattro dita fatte di tre segmenti, un pollice che parte da lato. La lunghezza delle dita segue un ordine fisso.',
+ tip:'Il dito medio è il più lungo, poi anulare e indice quasi uguali, il mignolo il più corto. Le punte delle dita formano un arco.',
+ err:['Dita tutte della stessa lunghezza e larghezza.','Pollice attaccato al palmo come un quinto dito: parte da molto più in basso.','Dita senza nocche: sembrano tubi.'],
+ drills:['10 mani aperte, solo costruzione con palmo e segmenti.','10 mani chiuse a pugno, viste di lato.','La tua mano in 5 pose diverse.'],
+ chk:['Il dito medio è il più lungo.','Il pollice parte dal basso del palmo.','Si vedono nocche e pieghe.'],
+ st:[
+ ['Disegna il palmo come un quadrato arrotondato, con il polso più stretto sotto. Il palmo è lungo circa quanto il dito medio.',
+  rc(390,380,220,190,30)+ln(420,570,415,660)+ln(580,570,585,660),''],
+ ['Segna le dita come linee con tre segmenti, con un piccolo cerchio sulle articolazioni. Medio più lungo, mignolo più corto.',
+  '',[[415,175],[470,200],[525,180],[580,140]].map(([x,l])=>ln(x,380,x,380-l)+ci(x,380-l*.35,6)+ci(x,380-l*.68,6)).join('')],
+ ['Disegna le dita come capsule (rettangoli arrotondati) attorno alle linee guida. Il mignolo è un po’ più stretto.',
+  hx(392,175)+hx(447,200)+hx(502,180)+rc(557,240,44,170,22),''],
+ ['Aggiungi il pollice: parte dal fondo del palmo e punta in fuori in diagonale. È più corto e largo delle altre dita.',
+  rc(-23,-140,46,150,23,'transform="translate(395 515) rotate(-55)"'),''],
+ ['Rifinisci: pieghe alle articolazioni, nocche in cima al palmo e piccole unghie sulle punte.',
+  [[415,175],[470,200],[525,180],[580,140]].map(([x,l])=>ln(x-14,380-l*.33,x+14,380-l*.33)+ln(x-14,380-l*.66,x+14,380-l*.66)+rc(x-12,380-l+10,24,18,8)).join('')+[415,470,525,580].map(x=>ci(x,392,5)).join(''),'']
+ ]});})();
+
+addL({m:4,t:'Pose e linea d’azione',lv:'Avanzato',min:40,
+ goal:'Dare energia alle pose con la linea d’azione e l’opposizione tra spalle e fianchi.',
+ intro:'Un personaggio rigido ha spalle e fianchi paralleli. Uno vivo ha una linea d’azione, una curva che attraversa tutto il corpo, e spalle e fianchi inclinati in direzioni opposte.',
+ tip:'Disegna prima la curva della posa in un solo gesto veloce: se la curva è bella, la posa funziona.',
+ err:['Posa dritta e frontale: nessuna energia.','Peso non distribuito: il personaggio sembra cadere.','Disegnare i dettagli prima di aver trovato la posa.'],
+ drills:['20 linee d’azione veloci, una per ogni posa diversa (corsa, salto, riposo, attacco).','10 stick figure con la linea di gravità.','Copia 5 pose da foto con soli ovali e linee.'],
+ chk:['La linea d’azione è una curva continua dal capo ai piedi.','Spalle e fianchi sono inclinati in modo opposto.','Il peso cade sopra il piede d’appoggio.'],
+ st:[
+ ['Traccia la linea d’azione: una curva morbida che parte dalla testa e attraversa il corpo fino ai piedi. Un gesto solo.',
+  pa('M430 100 C350 250 540 400 440 650'),''],
+ ['Disegna la linea delle spalle e quella dei fianchi, inclinate in direzioni opposte: più energia, più vita.',
+  ln(350,160,500,140)+ln(400,330,540,360),''],
+ ['Segna la linea di gravità: dalla fossa del collo scende dritta verso il basso. Il piede d’appoggio sta vicino a questa linea.',
+  '',ln(425,130,425,650)],
+ ['Disegna la figura a bastoncini sulla linea d’azione: testa, colonna, braccia, gamba d’appoggio e gamba libera.',
+  ci(430,85,32)+pa('M425 120 Q400 230 470 345')+pa('M350 160 L300 250 L330 330')+pa('M500 140 L560 230 L520 300')+pa('M440 350 L440 500 L430 640')+pa('M525 360 L570 500 L610 630'),''],
+ ['Aggiungi i volumi: ovali per torace, bacino e arti. Il personaggio comincia a prendere corpo.',
+  [[[425,150],[470,345],52],[[350,160],[300,250],17],[[300,250],[330,330],14],[[500,140],[560,230],17],[[560,230],[520,300],14],[[440,350],[440,500],24],[[440,500],[430,640],17],[[525,360],[570,500],22],[[570,500],[610,630],16]].map(([p,q,w])=>{const dx=q[0]-p[0],dy=q[1]-p[1];return el((p[0]+q[0])/2,(p[1]+q[1])/2,Math.hypot(dx,dy)/2+4,w,Math.atan2(dy,dx)*180/Math.PI+0);}).join(''),'']
+ ]});
+
+addL({m:4,t:'Personaggi chibi',lv:'Base',min:30,
+ goal:'Disegnare personaggi super-deformati: testa enorme, corpo piccolo, forme tonde.',
+ intro:'Lo stile chibi riduce il personaggio a due o tre teste di altezza, con testa grande e forme tonde. Serve per vignette comiche, adesivi e mascotte.',
+ tip:'Più è piccolo il corpo, più grandi devono essere gli occhi. Meno è realistico, più il disegno ha bisogno di forme semplici.',
+ err:['Corpo troppo lungo: il chibi è alto due teste e mezza.','Troppi dettagli: ogni dettaglio in più toglie carineria.','Mani e piedi spigolosi: devono essere rotondi.'],
+ drills:['10 chibi con la stessa testa e corpi diversi.','Trasforma un personaggio realistico in chibi.','Un chibi in 5 pose diverse.'],
+ chk:['Testa ≈ 40% dell’altezza.','Gli occhi sono grandi e bassi.','Le mani e i piedi sono rotondi.'],
+ st:[
+ ['Segna le proporzioni: la testa occupa quasi metà dell’altezza. Il corpo è circa una testa e mezza.',
+  '',ln(380,40,620,40)+ln(380,260,620,260)+ln(380,590,620,590)+tx(710,150,'1 testa',26)+tx(710,430,'1,5 teste',26)],
+ ['Disegna la testa: un ovale largo e tondo, più largo che alto.',
+  el(500,150,170,110),''],
+ ['Il corpo: un tronco corto a trapezio, braccia sottili e gambe corte e tonde. Piedi a ovale.',
+  pa('M455 262 L545 262 L555 400 L445 400 Z')+pa('M455 285 Q410 335 420 385')+pa('M545 285 Q590 335 580 385')+rc(455,400,40,170,18)+rc(505,400,40,170,18)+el(470,578,32,14)+el(530,578,32,14),''],
+ ['Il volto: occhi grandi e bassi, bocca minuscola, qualche guancia rotonda. I tratti stanno nella parte bassa della testa.',
+  el(420,175,30,40)+el(580,175,30,40)+ci(420,182,14,`fill="${INK}"`)+ci(580,182,14,`fill="${INK}"`)+pa('M485 215 Q500 230 515 215'),''],
+ ['Rifinisci con i capelli a ciuffo e due cerchietti per le mani. Pochi segni, tutto tondo.',
+  pa('M430 70 Q500 10 570 70 Q540 45 500 78 Q470 45 430 70')+ci(420,388,16)+ci(580,388,16),'']
+ ]});
+
+(function(){
+const shade=(cx,cy,r,mode)=>{
+  let s=ci(cx,cy,r);
+  if(mode===1)s+=clipG(cx,cy,r,hatchD(cx,cy,r,13,1));
+  if(mode===2)s+=clipG(cx,cy,r,hatchD(cx,cy,r,13,1)+hatchD(cx,cy,r,13,-1));
+  if(mode===3){let d='';for(let x=-r;x<=r;x+=14)for(let y=-r;y<=r;y+=14){if(x*x+y*y>r*r)continue;const v=(x+y)*.7071/r;if(v<.15)continue;const rr=Math.min(5.2,(v-.1)*6);d+=ci(cx+x,cy+y,rr,`fill="${INK}" stroke="none"`);}s+=d;}
+  if(mode===4){let d='',u=r*1.1,g=4;while(u>-.1*r){d+=ln(cx+u*.7071-1.2*r*.7071,cy+u*.7071+1.2*r*.7071,cx+u*.7071+1.2*r*.7071,cy+u*.7071-1.2*r*.7071);u-=g;g*=1.28;}s+=clipG(cx,cy,r,d);}
+  return s;};
+const P=[[270,180,'Tratteggio'],[730,180,'Tratteggio incrociato'],[270,500,'Retino a punti'],[730,500,'Sfumato a linee']];
+const AR=(x,y)=>arrow(x-160,y-120,x-90,y-60);
+addL({m:5,t:'Ombre e retini',lv:'Intermedio',min:35,
+ goal:'Dare volume con soli tratti, come nei fumetti in bianco e nero.',
+ intro:'Il manga si stampa in bianco e nero: le ombre si fanno con tratteggi e retini. Quattro modi di ombreggiare la stessa sfera, con la luce sempre dall’alto a sinistra.',
+ tip:'Confronta i quattro risultati: quale rende meglio il volume? Il retino a punti è lento ma molto elegante.',
+ err:['Tratti che non seguono la forma: seguono la curvatura della sfera.','Nessuna differenza tra ombra e luce: più fitti nell’ombra, più radi vicino alla luce.','Tratteggio troppo ordinato: deve avere un poco di mano.'],
+ drills:['Ombreggia un cubo, un cilindro e una sfera con ognuna delle quattro tecniche.','Disegna un oggetto a scelta e ombreggialo a retino.','Usa il tratteggio incrociato per un’ombra molto scura.'],
+ chk:['L’ombra è più fitta dal lato opposto alla luce.','La transizione verso la luce è graduale.','La luce arriva sempre dalla stessa direzione.'],
+ st:P.map(([x,y,l],i)=>['Sfera '+(i+1)+' · '+l+': '+['linee parallele sull’ombra, più fitte verso il bordo.','un secondo strato di linee ad angolo sopra il primo, per un’ombra più scura.','puntini su una griglia, più grandi e fitti nell’ombra. Usa la penna sottile e tocchi rapidi.','linee che si diradano verso la luce: partono fitte sul bordo e si allontanano sempre più.'][i],shade(x,y,120,i+1)+tx(x,y+160,l,24,'middle')+(i===0?'':''),i===0?AR(x,y):''])
+ });})();
+
+(function(){
+const pn=[[535,45,115,200],[350,45,170,200],[350,260,300,120],[535,395,115,260],[350,395,170,125],[350,535,170,120]];
+addL({m:5,t:'Impaginare una tavola',lv:'Intermedio',min:40,
+ goal:'Costruire una tavola leggibile: margini, vignette, balloon e ordine di lettura (da destra a sinistra).',
+ intro:'Una tavola manga si legge da destra verso sinistra e dall’alto verso il basso. L’impaginazione guida l’occhio: vignette grandi per i momenti importanti, piccole per quelli veloci.',
+ tip:'Usa un balloon alla volta per vignetta e lascia sempre spazio ai testi prima di disegnare: così i personaggi non finiscono coperti.',
+ err:['Vignette tutte uguali: la tavola diventa monotona.','Balloon che coprono i volti.','Ordine di lettura incerto: usa sempre la regola destra-sinistra, alto-basso.'],
+ drills:['5 impaginazioni diverse della stessa scena in 6 vignette.','Una tavola di 4 vignette con un momento drammatico in una vignetta grande.','Una gag in 4 vignette (stile yonkoma, in verticale).'],
+ chk:['L’ordine di lettura è chiaro.','Le vignette hanno spazi regolari tra loro (le «grondaie»).','Ogni balloon si legge subito senza coprire un volto.'],
+ st:[
+ ['Disegna il bordo della pagina e il margine interno: l’area dove stanno le vignette. Lascia un po’ di respiro ai bordi.',
+  rc(330,25,340,650)+rc(350,45,300,610),''],
+ ['Dividi la pagina in righe orizzontali, lasciando tra una riga e l’altra uno spazio regolare, la «grondaia».',
+  ln(350,252,650,252)+ln(350,387,650,387),''],
+ ['Dividi ogni riga in vignette di grandezza diversa: una grande per il momento importante, le altre più piccole.',
+  pn.map(p=>rc(p[0],p[1],p[2],p[3])).join(''),''],
+ ['Aggiungi i balloon nelle zone libere delle vignette, in alto: così si leggono prima di arrivare ai personaggi.',
+  el(590,95,40,26)+el(435,95,60,26)+el(500,320,70,28)+el(590,470,40,28),''],
+ ['Ordine di lettura: da destra a sinistra e dall’alto in basso. Numera le vignette e segna le frecce.',
+  [[565,225],[380,225],[380,370],[565,640],[380,508],[380,648]].map((p,i)=>tx(p[0],p[1],String(i+1),44,'middle',ACC)).join('')+arrow(650,12,350,12),'']
+ ]});})();
+
+(function(){
+const sil=(x,w,h,r)=>rc(x,640-h,w,h,r,'fill="#8d98a8" fill-opacity=".6" stroke="none"');
+addL({m:5,t:'Foglio del personaggio',lv:'Avanzato',min:45,
+ goal:'Creare il foglio di un tuo personaggio originale: viste, silhouette, segni distintivi, palette.',
+ intro:'Un personaggio che puoi disegnare mille volte uguale ha un foglio di riferimento: tre viste della testa, una silhouette riconoscibile, pochi segni distintivi e una palette di colori ristretta.',
+ tip:'Se riesci a riconoscere il personaggio dalla sola silhouette nera, il design funziona.',
+ err:['Troppi accessori: tre segni distintivi bastano.','Silhouette simile a quella di altri personaggi: cambiala.','Palette di sei o sette colori: stai sotto i quattro.'],
+ drills:['Disegna il foglio di tre personaggi, uno per tipo (alto, tondo, piccolo).','Riscrivi lo stesso personaggio in versione chibi.','Disegna il tuo personaggio in 5 pose e 5 espressioni.'],
+ chk:['Le tre viste della testa sono coerenti tra loro.','La silhouette è unica e riconoscibile.','I segni distintivi sono al massimo tre.'],
+ st:[
+ ['Disegna la testa del personaggio in tre viste: di fronte, di tre quarti e di profilo. Gli stessi elementi devono rimanere gli stessi.',
+  ci(200,150,85)+ln(200,70,200,235)+ci(500,150,85)+pa('M520 70 Q560 150 525 235')+ci(800,150,85)+pa('M718 150 L700 168 L722 175'),''],
+ ['Disegna la silhouette del corpo in forma piena: forme diverse (alta e snella, tonda, piccola) danno personalità.',
+  sil(130,90,300,40)+sil(260,130,230,60)+sil(440,80,180,36),''],
+ ['Scegli tre segni distintivi (per esempio capelli, un accessorio e un colore) e annotali sul foglio.',
+  tx(580,420,'1 · capelli',28)+tx(580,470,'2 · accessorio',28)+tx(580,520,'3 · colore',28),''],
+ ['Scegli una palette di non più di quattro colori e segnala dove vanno.',
+  rc(620,560,70,70,8,'fill="#d94d3f"')+rc(710,560,70,70,8,'fill="#2f5d9f"')+rc(800,560,70,70,8,'fill="#f2c94c"')+rc(890,560,70,70,8,'fill="#2b2b2b"'),'']
+ ]});})();
+
+/* ---------- interfaccia del corso ---------- */
+let CP={done:[],chk:{}};
+try{const u=JSON.parse(localStorage.getItem('taccuino.corso')||'{}')||{};if(Array.isArray(u.done))CP.done=u.done.filter(Number.isInteger);if(u.chk&&typeof u.chk==='object')CP.chk=u.chk;}catch(e){}
+const saveCP=()=>{try{localStorage.setItem('taccuino.corso',JSON.stringify(CP));}catch(e){}};
+const isDone=n=>CP.done.includes(n);
+const setDone=(n,v)=>{CP.done=CP.done.filter(x=>x!==n);if(v)CP.done.push(n);saveCP();};
+const nextLesson=()=>(LESSONS.find(L=>!isDone(L.n))||LESSONS[0]).n;
+const mk$=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+
 function showCourse(){
-  show('course');const box=$('#lessons');box.innerHTML='';
-  LESSONS.forEach((L,i)=>{const b=document.createElement('button');b.className='les'+(doneSet.has(i)?' done':'');
-    b.innerHTML='<span class="n"></span><span><b></b><small></small></span>';
-    b.querySelector('.n').textContent=doneSet.has(i)?'✓':String(i+1);b.querySelector('b').textContent=L.t;b.querySelector('small').textContent=L.lv+' · '+L.min+' min';
-    b.onclick=()=>{location.hash='lezione-'+(i+1);};box.append(b);});
+  show('course');const box=$('#lessons');box.innerHTML='';box.className='course';
+  const tot=LESSONS.length,dn=LESSONS.filter(L=>isDone(L.n)).length;
+  const top=mk$('div','cstat');
+  const t1=mk$('div','cs1');t1.append(mk$('b','',dn+' di '+tot+' lezioni completate'),mk$('span','',dn===tot?'Corso completato: complimenti!':'Prossima lezione consigliata: '+nextLesson()+' · '+LESSONS[nextLesson()-1].t));
+  const bar=mk$('div','pbar'),fill=mk$('i');fill.style.width=Math.round(dn/tot*100)+'%';bar.append(fill);
+  const go=btn(dn===0?'Comincia dalla lezione 1':dn===tot?'Rivedi dall’inizio':'Continua','primary',()=>{location.hash='lezione-'+(dn===tot?1:nextLesson());});
+  top.append(t1,bar,go);box.append(top);
+  MODS.forEach((M,mi)=>{
+    const ls=LESSONS.filter(L=>L.m===mi),md=ls.filter(L=>isDone(L.n)).length;
+    const sec=mk$('section','mod'),h=mk$('div','mh');
+    h.append(mk$('span','mn','MODULO '+(mi+1)),mk$('h3','',M.t),mk$('span','mc',md+'/'+ls.length));
+    sec.append(h,mk$('p','md',M.d));
+    const g=mk$('div','lessons');
+    ls.forEach(L=>{const b=mk$('button','les'+(isDone(L.n)?' done':''));
+      b.innerHTML='<span class="n"></span><span><b></b><small></small></span>';
+      b.querySelector('.n').textContent=isDone(L.n)?'✓':String(L.n);b.querySelector('b').textContent=L.t;b.querySelector('small').textContent=L.lv+' · '+L.min+' min · '+L.st.length+' passi';
+      b.onclick=()=>{location.hash='lezione-'+L.n;};g.append(b);});
+    sec.append(g);box.append(sec);
+  });
 }
+
+function listBlock(title,items,cls){const d=mk$('div','blk '+(cls||''));d.append(mk$('h3','',title));const u=mk$('ul');items.forEach(t=>u.append(mk$('li','',t)));d.append(u);return d;}
+
 function showLesson(n){
-  const i=n-1,L=LESSONS[i];if(!L){location.hash='corso';return;}
+  const L=LESSONS[n-1];if(!L){location.hash='corso';return;}
   show('lesson');$('#lTitle').textContent='Lezione '+n+' · '+L.t;
-  const b=$('#lBody');b.innerHTML='';
-  const left=document.createElement('div'),right=document.createElement('div');
-  const tags=document.createElement('div');tags.className='tags';tags.innerHTML='<span class="tag"></span><span class="tag"></span>';tags.children[0].textContent=L.lv;tags.children[1].textContent=L.min+' minuti';
-  const p=document.createElement('p');p.textContent=L.intro;p.style.maxWidth='62ch';
-  const ol=document.createElement('ol');L.steps.forEach(s=>{const li=document.createElement('li');li.textContent=s;ol.append(li);});
-  const tip=document.createElement('div');tip.className='tip';const tb=document.createElement('b');tb.textContent='Consiglio';tip.append(tb,document.createElement('br'),L.tip);
-  const acts=document.createElement('div');acts.className='row';acts.style.marginTop='18px';
-  acts.append(btn('Esercitati su una pagina guida','primary',async()=>{
-    const q={id:uid(),title:'Lezione '+n+' · '+L.t,created:Date.now(),updated:Date.now(),w:PW,h:PH,bg:'bianco',last:0,thumb:null,pages:[]};
-    const g1=newPage(PW,PH,'bianco');await attachImage(g1,svgUrl(L.guide()));q.pages.push(g1,newPage(PW,PH,'quadretti'));
-    q.thumb=makeThumb(g1);await store.put(q);openNb(q);}),
-    btn(doneSet.has(i)?'Segnata come fatta':'Segna come fatta','',()=>{doneSet.has(i)?doneSet.delete(i):doneSet.add(i);try{localStorage.setItem('taccuino.done',JSON.stringify([...doneSet]));}catch(e){}showLesson(n);}));
-  left.append(tags,p,ol,tip,acts);
-  const gd=document.createElement('div');gd.className='guide';const im=document.createElement('img');im.alt='Anteprima della pagina guida';im.src=svgUrl(L.guide());gd.append(im);right.append(gd);
-  b.append(left,right);
+  const b=$('#lBody');b.innerHTML='';b.className='lw';window.scrollTo(0,0);try{$('#lesson').scrollTop=0;}catch(e){}
+  const tags=mk$('div','tags');[MODS[L.m].t,L.lv,L.min+' minuti',L.st.length+' passi'].forEach(t=>tags.append(mk$('span','tag',t)));
+  const goal=mk$('div','goal');goal.append(mk$('b','','Obiettivo'),document.createElement('br'),L.goal);
+  b.append(tags,goal,mk$('p','lead',L.intro));
+  b.append(mk$('h3','sec','Passo per passo'));
+  const sl=mk$('div','steps');
+  L.st.forEach((s,i)=>{
+    const c=mk$('div','stp'),num=mk$('span','sn',String(i+1)),txt=mk$('div','st');
+    txt.append(mk$('b','', 'Passo '+(i+1)+' di '+L.st.length),mk$('p','',s[0]));
+    const gd=mk$('div','guide'),im=new Image();im.alt='Disegno del passo '+(i+1);im.loading='lazy';im.src=svgUrl(diagram(L,i,'step'));gd.append(im);
+    c.append(num,txt,gd);sl.append(c);
+  });
+  b.append(sl);
+  const fin=mk$('div','fin');fin.append(mk$('h3','','Risultato finale'));const gd=mk$('div','guide'),im=new Image();im.alt='Risultato finale';im.src=svgUrl(diagram(L,0,'final'));gd.append(im);fin.append(gd);
+  b.append(fin);
+  const cols=mk$('div','cols');cols.append(listBlock('Errori comuni',L.err,'err'),listBlock('Esercizi di ripasso',L.drills,'dr'));b.append(cols);
+  const ck=mk$('div','blk chk');ck.append(mk$('h3','','Controlla il tuo lavoro'));
+  const sel=new Set(CP.chk[n]||[]);
+  L.chk.forEach((t,i)=>{const lb=mk$('label','ck'),inp=document.createElement('input');inp.type='checkbox';inp.checked=sel.has(i);
+    inp.onchange=()=>{inp.checked?sel.add(i):sel.delete(i);CP.chk[n]=[...sel];saveCP();if(sel.size===L.chk.length&&!isDone(n)){setDone(n,true);toast('Lezione '+n+' completata. Ottimo lavoro!');upd();}};
+    lb.append(inp,mk$('span','',t));ck.append(lb);});
+  b.append(ck);
+  const tip=mk$('div','tip');tip.append(mk$('b','','Consiglio'),document.createElement('br'),L.tip);b.append(tip);
+  const acts=mk$('div','row act2');
+  const doneB=btn('','',()=>{setDone(n,!isDone(n));upd();});
+  const upd=()=>{doneB.textContent=isDone(n)?'Completata ✓ (tocca per annullare)':'Segna come completata';doneB.classList.toggle('primary',false);};upd();
+  acts.append(btn('Esercizio guidato: pagine da ricalcare','primary',()=>practice(L)),doneB);b.append(acts);
+  const nav=mk$('div','row nav2');
+  if(n>1)nav.append(btn('← Lezione '+(n-1),'',()=>{location.hash='lezione-'+(n-1);}));
+  if(n<LESSONS.length)nav.append(btn('Lezione '+(n+1)+' →','',()=>{location.hash='lezione-'+(n+1);}));
+  else nav.append(btn('Torna al corso','',()=>{location.hash='corso';}));
+  b.append(nav);
+}
+
+/* pagine A4 dell'esercizio: guida da ricalcare in alto, spazio libero in basso */
+function pageSvg(title,sub,lines,inner,hint,box){
+  let t='';lines.forEach((l,i)=>{t+=`<text x="70" y="${215+i*42}" font-family="sans-serif" font-size="30" fill="#4a5a70">${esc(l)}</text>`;});
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1754" width="1240" height="1754"><text x="70" y="105" font-family="sans-serif" font-size="44" font-weight="700" fill="#4a5a70">${esc(title)}</text><text x="70" y="152" font-family="sans-serif" font-size="28" fill="#7d8da3">${esc(sub)}</text>${t}${inner}${box?`<rect x="40" y="1235" width="1160" height="470" rx="18" fill="none" stroke="#a9b6c9" stroke-width="3" stroke-dasharray="14 12"/><text x="70" y="1280" font-family="sans-serif" font-size="28" fill="#7d8da3">${esc(hint)}</text>`:''}</svg>`;
+}
+async function practice(L){
+  const T='Lezione '+L.n+' · '+L.t,pages=[];
+  const g=(s)=>`<g transform="translate(20 330) scale(1.2)">${s}</g>`;
+  const inner=svg=>g(svg.replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,''));
+  pages.push(pageSvg(T,'Riscaldamento e obiettivo',wrapT('Obiettivo: '+L.goal,70).slice(0,3),'<g font-family="sans-serif" font-size="28" fill="#4a5a70">'+L.drills.map((d,i)=>wrapT((i+1)+'. '+d,72).map((x,j)=>`<text x="${j?100:70}" y="${400+i*150+j*38}">${esc(x)}</text>`).join('')).join('')+'</g>','Riscaldamento: prova qui gli esercizi di ripasso.',true));
+  L.st.forEach((s,i)=>pages.push(pageSvg(T,'Passo '+(i+1)+' di '+L.st.length+' · ricalca i puntini, poi rifai qui sotto da solo',wrapT(s[0],68).slice(0,4),inner(diagram(L,i,'trace')),'Ora rifai da solo, senza guida.',true)));
+  pages.push(pageSvg(T,'Risultato finale · ricalca e poi prova in libertà',wrapT('Metti insieme tutti i passi. Quando ti senti pronto, rifai il disegno nello spazio sotto.',68),inner(diagram(L,0,'trace_final')),'Rifai il disegno completo, a modo tuo.',true));
+  const q={id:uid(),title:T,created:Date.now(),updated:Date.now(),w:PW,h:PH,bg:'bianco',last:0,thumb:null,pages:[]};
+  for(const svg of pages){const pg=newPage(PW,PH,'bianco');await attachImage(pg,svgUrl(svg));q.pages.push(pg);}
+  q.pages.push(newPage(PW,PH,'quadretti'));
+  q.thumb=makeThumb(q.pages[0]);await store.put(q);openNb(q);
 }
 $('#cBack').onclick=()=>{location.hash='';};$('#lBack').onclick=()=>{location.hash='corso';};
 
