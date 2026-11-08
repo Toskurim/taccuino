@@ -1,6 +1,6 @@
-/* Taccuino 0.4.0 - funziona anche offline. Con la rete scarica sempre l'ultima versione;
+/* Taccuino 0.5.0 - funziona anche offline. Con la rete scarica sempre l'ultima versione;
    senza rete usa la copia salvata. */
-const CACHE='taccuino-0.4.0';
+const CACHE='taccuino-0.5.0';
 const FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE)

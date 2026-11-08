@@ -1,28 +1,16 @@
-TACCUINO - versione 0.4.0
-Quaderni a penna per tablet Android. Gratis, senza account, in italiano.
+TACCUINO - versione 0.5.0
 
-NOVITA' DELLA 0.4.0
-  - CORSO DI DISEGNO RIFATTO: 24 lezioni in 6 moduli (prima erano 10, troppo semplici).
-      1 Mano e occhio: gesto e riscaldamento, curve e ellissi, misurare a occhio
-      2 Forme e volume: sfera e luce, cubo, cilindro e cono, oggetti con le forme base
-      3 Prospettiva: orizzonte, un punto di fuga, due punti di fuga
-      4 Il volto manga: volto di fronte, di tre quarti, di profilo, occhi, naso/bocca/orecchie, capelli, espressioni
-      5 Corpo e mani: manichino, mani, pose e linea d'azione, personaggi chibi
-      6 Inchiostro e tavole: ombre e retini, impaginare una tavola, foglio del personaggio
-    Ogni lezione ha: obiettivo, spiegazione, passi con il disegno costruito pezzo per pezzo (il tratto
-    nuovo e' in arancione), risultato finale, errori comuni, esercizi di ripasso, controlli da spuntare e consiglio.
-  - "Esercizio guidato": apre un quaderno con una pagina di riscaldamento, una pagina per OGNI passo
-    (guida puntinata da ricalcare in alto, spazio libero sotto per rifare da solo) e una pagina finale.
-  - Progressi salvati: lezioni completate e controlli spuntati. Il corso ti propone la prossima lezione.
-  - DISEGNO VELOCE: eliminato il ritardo quando si disegnano tante linee di seguito. Prima a ogni tratto
-    l'app ridisegnava da zero tutta la pagina; ora aggiunge solo il tratto nuovo. Anche il salvataggio
-    e l'anteprima del quaderno pesano molto meno.
+NOVITA'
+- Motore di disegno rifatto: il tratto compare subito, anche con tante linee veloci.
+- Zoom e spostamento fluidi, e il disegno resta nitido anche con zoom molto alto.
+- Matite piu' leggere e naturali.
+- Nuovi pastelli a cera: "Cera" e "Cera larga".
+- Nuovo strumento "Sfuma": sfuma il disegno con la penna o con il dito. L'intensita' si regola nel pannello.
+- L'evidenziatore ora sta sotto l'inchiostro.
 
-COME AGGIORNARE L'APP GIA' PUBBLICATA SU GITHUB
-  1. Apri https://github.com/Toskurim/taccuino > "Add file" > "Upload files".
-  2. Trascina index.html e sw.js (gli altri file non sono cambiati).
-  3. Messaggio "Taccuino v0.4.0" e "Commit changes".
-  4. Dopo un minuto apri l'app con internet attivo; in fondo alla home c'e' scritto "Versione 0.4.0".
+COME INSTALLARE
+Apri index.html (tablet: apri il sito e "Aggiungi a schermata Home").
 
-NOTA: i progressi del vecchio corso a 10 lezioni non vengono riportati (le lezioni sono cambiate).
-I quaderni e i disegni gia' fatti restano com'erano.
+AGGIORNARE IL SITO (GitHub)
+Nella pagina di upload del repository trascina index.html e sw.js,
+messaggio: "Taccuino v0.5.0", poi Commit.
